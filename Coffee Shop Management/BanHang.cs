@@ -10,15 +10,33 @@ namespace Coffee_Shop_Management
     {
         private int idbdc = -1;
         private readonly string TenNhanVien;
+        private readonly string QuyenHan;
 
-        public BanHang(string TenTK = "admin")
+        public BanHang(string TenTK = "admin", string Quyen = "Admin")
         {
             InitializeComponent();
             this.TenNhanVien = TenTK;
-            this.Text = $"Quản lý bán hàng - Nhân viên: {TenNhanVien}";
+            this.QuyenHan = Quyen;
+            this.Text = $"Gác Xép Tháng Tư - Quản lý bán hàng | Tài khoản: {TenNhanVien} ({QuyenHan})";
 
-            // Sự kiện trên thanh MenuStrip
-            mnuTraCuuHD.Click += (s, e) => new TimKiemHoaDon().ShowDialog();
+            TrangTriGiaoDienBanHang();
+
+            bx.Enabled = true;
+
+            bool isAdmin = QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase);
+            mnuTraCuuHD.Visible = isAdmin;
+            mnuTraCuuHD.Enabled = isAdmin;
+
+            mnuTraCuuHD.Click += (s, e) =>
+            {
+                if (!QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Bạn không có quyền truy cập chức năng Tra cứu hóa đơn!", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                new TimKiemHD().ShowDialog();
+            };
+
             mnuDangXuat.Click += (s, e) =>
             {
                 if (MessageBox.Show("Bạn có muốn đăng xuất không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
@@ -82,6 +100,46 @@ namespace Coffee_Shop_Management
             };
         }
 
+        private void TrangTriGiaoDienBanHang()
+        {
+            this.BackColor = CoffeeTheme.CreamBg;
+
+            menuStrip1.BackColor = CoffeeTheme.EspressoDark;
+            menuStrip1.ForeColor = Color.White;
+            menuStrip1.Padding = new Padding(10, 5, 10, 5);
+            mnuTraCuuHD.Text = "Tra cứu hóa đơn (F3)";
+            mnuTraCuuHD.ForeColor = Color.FromArgb(255, 224, 130);
+            mnuTraCuuHD.Image = CoffeeIcons.Search(Color.FromArgb(255, 224, 130), 18);
+            mnuDangXuat.ForeColor = Color.FromArgb(255, 171, 145);
+
+            grpban.ForeColor = CoffeeTheme.EspressoDark;
+            gcthd.ForeColor = CoffeeTheme.EspressoDark;
+            grpChonMon.ForeColor = CoffeeTheme.EspressoDark;
+            gtt.ForeColor = CoffeeTheme.EspressoDark;
+
+            sdb.BackColor = Color.White;
+            lsvhd.BackColor = Color.White;
+            lsvhd.BorderStyle = BorderStyle.None;
+
+            GanIconNut(btm, CoffeeTheme.PrimaryBlue, CoffeeIcons.Plus(Color.White, 16), " THÊM");
+            GanIconNut(bs, CoffeeTheme.WarningOrange, CoffeeIcons.Edit(Color.White, 16), " SỬA");
+            GanIconNut(bx, CoffeeTheme.DangerRed, CoffeeIcons.Trash(Color.White, 16), " XÓA");
+            GanIconNut(btt, CoffeeTheme.SuccessGreen, CoffeeIcons.Check(Color.White, 22), " THANH TOÁN");
+
+            tt.BackColor = CoffeeTheme.CreamBg;
+            tt.BorderStyle = BorderStyle.FixedSingle;
+        }
+
+        private void GanIconNut(Button btn, Color mauNen, Image icon, string chu)
+        {
+            btn.BackColor = mauNen;
+            btn.Image = icon;
+            btn.Text = chu;
+            btn.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btn.ImageAlign = ContentAlignment.MiddleCenter;
+            btn.TextAlign = ContentAlignment.MiddleCenter;
+        }
+
         private void LoadDanhSachBan()
         {
             sdb.Controls.Clear();
@@ -89,27 +147,41 @@ namespace Coffee_Shop_Management
 
             foreach (DataRow row in dt.Rows)
             {
-                Button btn = new Button
-                {
-                    Width = 92,
-                    Height = 92,
-                    Margin = new Padding(5),
-                    FlatStyle = FlatStyle.Flat,
-                    Cursor = Cursors.Hand
-                };
-                btn.FlatAppearance.BorderColor = Color.Silver;
-
                 int idBan = Convert.ToInt32(row["ID"]);
                 string tenBan = row["TenBan"].ToString();
                 string loaiBan = row["Loai"]?.ToString() ?? "";
                 string trangThai = row["TrangThai"].ToString();
+                bool isTrong = (trangThai == "Trống");
 
-                btn.Text = string.IsNullOrWhiteSpace(loaiBan)
-                    ? $"{tenBan}\n[{trangThai}]"
-                    : $"{tenBan}\n({loaiBan})\n[{trangThai}]";
+                RoundedButton btn = new RoundedButton
+                {
+                    Width = 108,
+                    Height = 104,
+                    Margin = new Padding(7),
+                    Padding = new Padding(0, 8, 0, 6),
+                    BorderRadius = 14,
+                    BorderSize = 2,
+                    BorderColor = isTrong ? CoffeeTheme.MintBorder : CoffeeTheme.PeachBorder,
+                    BackColor = isTrong ? CoffeeTheme.MintEmpty : CoffeeTheme.PeachBusy,
+                    ForeColor = CoffeeTheme.EspressoDark,
+                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    Image = isTrong
+                        ? CoffeeIcons.EmptyTable(Color.FromArgb(46, 125, 50), 24)
+                        : CoffeeIcons.CoffeeCup(Color.FromArgb(216, 67, 21), 24),
+                    ImageAlign = ContentAlignment.TopCenter,
+                    TextImageRelation = TextImageRelation.ImageAboveText,
+                    TextAlign = ContentAlignment.BottomCenter,
+                    Text = string.IsNullOrWhiteSpace(loaiBan)
+                        ? $"{tenBan}\n[{trangThai}]"
+                        : $"{tenBan} ({loaiBan})\n[{trangThai}]",
+                    Tag = new Tuple<int, string>(idBan, tenBan)
+                };
 
-                btn.Tag = new Tuple<int, string>(idBan, tenBan);
-                btn.BackColor = (trangThai == "Trống") ? Color.LightCyan : Color.LightPink;
+                if (idBan == idbdc)
+                {
+                    btn.BorderSize = 3;
+                    btn.BorderColor = CoffeeTheme.EspressoDark;
+                }
 
                 btn.Click += BtnBan_Click;
                 sdb.Controls.Add(btn);
@@ -123,6 +195,7 @@ namespace Coffee_Shop_Management
             idbdc = info.Item1;
             lbdc.Text = $"Đang chọn: {info.Item2}";
 
+            LoadDanhSachBan();
             HienThiHoaDon(idbdc);
         }
 
@@ -141,6 +214,7 @@ namespace Coffee_Shop_Management
             SqlParameter[] p = { new SqlParameter("@IDb", idBan) };
             DataTable dt = ketnoi.LayDuLieu(query, p);
 
+            int index = 0;
             foreach (DataRow row in dt.Rows)
             {
                 ListViewItem item = new ListViewItem(row["Tenmon"].ToString());
@@ -150,6 +224,9 @@ namespace Coffee_Shop_Management
                 decimal thanhTien = Convert.ToDecimal(row["ThanhTien"]);
                 item.SubItems.Add(thanhTien.ToString("N0"));
                 tongTien += thanhTien;
+
+                if (index % 2 == 1) item.BackColor = CoffeeTheme.CreamBg;
+                index++;
 
                 lsvhd.Items.Add(item);
             }

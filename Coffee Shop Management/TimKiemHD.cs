@@ -6,25 +6,68 @@ using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
 {
-    public partial class TimKiemHoaDon : Form
+    public partial class TimKiemHD : Form
     {
-        public TimKiemHoaDon()
+        public TimKiemHD()
         {
             InitializeComponent();
+            UIHelper.StyleDataGridView(dgvHoaDon);
+            UIHelper.StyleDataGridView(dgvChiTiet);
+            this.BackColor = CoffeeTheme.CreamBg;
+
             cbTrangThai.SelectedIndex = 0;
+
+            // Lọc realtime ngay khi gõ từ khóa, đổi trạng thái hoặc đổi ngày
+            tbtk.TextChanged += (s, e) => TimKiem();
+            cbTrangThai.SelectedIndexChanged += (s, e) => TimKiem();
+            dtpTuNgay.ValueChanged += (s, e) => { if (chkLocNgay.Checked) TimKiem(); };
+            dtpDenNgay.ValueChanged += (s, e) => { if (chkLocNgay.Checked) TimKiem(); };
 
             chkLocNgay.CheckedChanged += (s, e) =>
             {
                 dtpTuNgay.Enabled = chkLocNgay.Checked;
                 dtpDenNgay.Enabled = chkLocNgay.Checked;
+                TimKiem();
             };
 
-            btim.Click += (s, e) => TimKiem();
-            tbtk.TextChanged += (s, e) => TimKiem();
-            cbTrangThai.SelectedIndexChanged += (s, e) => TimKiem();
-            dgvHoaDon.CellClick += dgvHoaDon_CellClick;
+            // Lọc nhanh 1 chạm hóa đơn trong ngày hôm nay
+            btnHomNay.Click += (s, e) =>
+            {
+                chkLocNgay.Checked = true;
+                dtpTuNgay.Value = DateTime.Today;
+                dtpDenNgay.Value = DateTime.Today;
+                TimKiem();
+            };
 
-            Load += (s, e) => TimKiem();
+            // Xóa toàn bộ bộ lọc về mặc định
+            btnLamMoi.Click += (s, e) =>
+            {
+                tbtk.Clear();
+                cbTrangThai.SelectedIndex = 0;
+                chkLocNgay.Checked = false;
+                TimKiem();
+                tbtk.Focus();
+            };
+
+            // Tự động hiển thị chi tiết món của dòng đang chọn
+            dgvHoaDon.SelectionChanged += (s, e) =>
+            {
+                if (dgvHoaDon.CurrentRow == null)
+                {
+                    dgvChiTiet.DataSource = null;
+                    return;
+                }
+                if (int.TryParse(dgvHoaDon.CurrentRow.Cells["Mã HĐ"].Value?.ToString(), out int idHD))
+                {
+                    HienThiChiTiet(idHD);
+                }
+            };
+
+            Load += (s, e) =>
+            {
+                TimKiem();
+                tbtk.Focus();
+            };
         }
 
         private void TimKiem()
@@ -76,6 +119,17 @@ namespace Coffee_Shop_Management
 
                 if (dgvHoaDon.Columns["Tổng tiền"] != null)
                     dgvHoaDon.Columns["Tổng tiền"].DefaultCellStyle.Format = "N0";
+
+                decimal tongDoanhThu = 0;
+                foreach (DataRow r in dt.Rows)
+                {
+                    if (r["Tổng tiền"] != DBNull.Value)
+                        tongDoanhThu += Convert.ToDecimal(r["Tổng tiền"]);
+                }
+                lblThongKe.Text = $"Tìm thấy: {dt.Rows.Count} hóa đơn  |  Tổng cộng: {tongDoanhThu:N0} VNĐ";
+
+                if (dt.Rows.Count == 0)
+                    dgvChiTiet.DataSource = null;
             }
             catch (Exception ex)
             {
@@ -83,12 +137,8 @@ namespace Coffee_Shop_Management
             }
         }
 
-        private void dgvHoaDon_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void HienThiChiTiet(int idHD)
         {
-            if (e.RowIndex < 0) return;
-
-            int idHD = Convert.ToInt32(dgvHoaDon.Rows[e.RowIndex].Cells["Mã HĐ"].Value);
-
             string queryCT = @"
                 SELECT m.Tenmon AS [Tên món],
                        ct.SoLuong AS [Số lượng],

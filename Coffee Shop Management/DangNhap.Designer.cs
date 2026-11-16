@@ -13,13 +13,12 @@
             base.Dispose(disposing);
         }
 
-        private System.Windows.Forms.Panel pnlLeft;
-        private System.Windows.Forms.Label lblBrand;
-        private System.Windows.Forms.Panel pnlRight;
+        private System.Windows.Forms.Panel pnlHeader;
         private System.Windows.Forms.Label lblTitle;
-        private System.Windows.Forms.Label ltk;
-        private System.Windows.Forms.TextBox tk;
-        private System.Windows.Forms.Label lmk;
+        private System.Windows.Forms.Label lblSubTitle;
+        private System.Windows.Forms.Label lblUser;
+        private System.Windows.Forms.TextBox tentk;
+        private System.Windows.Forms.Label lblPass;
         private System.Windows.Forms.TextBox mk;
         private System.Windows.Forms.CheckBox htmk;
         private System.Windows.Forms.Button dn;
@@ -27,165 +26,140 @@
 
         private void InitializeComponent()
         {
-            this.pnlLeft = new System.Windows.Forms.Panel();
-            this.lblBrand = new System.Windows.Forms.Label();
-            this.pnlRight = new System.Windows.Forms.Panel();
-            this.bt = new System.Windows.Forms.Button();
-            this.dn = new System.Windows.Forms.Button();
-            this.htmk = new System.Windows.Forms.CheckBox();
-            this.mk = new System.Windows.Forms.TextBox();
-            this.lmk = new System.Windows.Forms.Label();
-            this.tk = new System.Windows.Forms.TextBox();
-            this.ltk = new System.Windows.Forms.Label();
+            this.pnlHeader = new System.Windows.Forms.Panel();
+            this.lblSubTitle = new System.Windows.Forms.Label();
             this.lblTitle = new System.Windows.Forms.Label();
-            this.pnlLeft.SuspendLayout();
-            this.pnlRight.SuspendLayout();
+            this.lblUser = new System.Windows.Forms.Label();
+            this.tentk = new System.Windows.Forms.TextBox();
+            this.lblPass = new System.Windows.Forms.Label();
+            this.mk = new System.Windows.Forms.TextBox();
+            this.htmk = new System.Windows.Forms.CheckBox();
+            this.dn = new System.Windows.Forms.Button();
+            this.bt = new System.Windows.Forms.Button();
+            this.pnlHeader.SuspendLayout();
             this.SuspendLayout();
             // 
-            // pnlLeft
+            // pnlHeader
             // 
-            this.pnlLeft.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.pnlLeft.Controls.Add(this.lblBrand);
-            this.pnlLeft.Dock = System.Windows.Forms.DockStyle.Left;
-            this.pnlLeft.Location = new System.Drawing.Point(0, 0);
-            this.pnlLeft.Name = "pnlLeft";
-            this.pnlLeft.Size = new System.Drawing.Size(426, 568);
-            this.pnlLeft.TabIndex = 0;
+            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
+            this.pnlHeader.Controls.Add(this.lblSubTitle);
+            this.pnlHeader.Controls.Add(this.lblTitle);
+            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
+            this.pnlHeader.Name = "pnlHeader";
+            this.pnlHeader.Size = new System.Drawing.Size(498, 117);
+            this.pnlHeader.TabIndex = 7;
             // 
-            // lblBrand
+            // lblSubTitle
             // 
-            this.lblBrand.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
-            this.lblBrand.ForeColor = System.Drawing.Color.White;
-            this.lblBrand.Location = new System.Drawing.Point(12, 193);
-            this.lblBrand.Name = "lblBrand";
-            this.lblBrand.Size = new System.Drawing.Size(389, 117);
-            this.lblBrand.TabIndex = 1;
-            this.lblBrand.Text = "GÁC XÉP THÁNG TƯ COFFEE\nMANAGEMENT";
-            this.lblBrand.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblSubTitle.AutoSize = true;
+            this.lblSubTitle.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Italic);
+            this.lblSubTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.lblSubTitle.Location = new System.Drawing.Point(77, 73);
+            this.lblSubTitle.Name = "lblSubTitle";
+            this.lblSubTitle.Size = new System.Drawing.Size(341, 25);
+            this.lblSubTitle.TabIndex = 0;
+            this.lblSubTitle.Text = "Hệ thống quản lý của Gác Xép Tháng Tư";
             // 
-            // pnlRight
+            // lblTitle
             // 
-            this.pnlRight.BackColor = System.Drawing.Color.White;
-            this.pnlRight.Controls.Add(this.bt);
-            this.pnlRight.Controls.Add(this.dn);
-            this.pnlRight.Controls.Add(this.htmk);
-            this.pnlRight.Controls.Add(this.mk);
-            this.pnlRight.Controls.Add(this.lmk);
-            this.pnlRight.Controls.Add(this.tk);
-            this.pnlRight.Controls.Add(this.ltk);
-            this.pnlRight.Controls.Add(this.lblTitle);
-            this.pnlRight.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlRight.Location = new System.Drawing.Point(426, 0);
-            this.pnlRight.Name = "pnlRight";
-            this.pnlRight.Size = new System.Drawing.Size(627, 568);
-            this.pnlRight.TabIndex = 1;
+            this.lblTitle.AutoSize = true;
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
+            this.lblTitle.Location = new System.Drawing.Point(135, 18);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(217, 45);
+            this.lblTitle.TabIndex = 1;
+            this.lblTitle.Text = "ĐĂNG NHẬP";
             // 
-            // bt
+            // lblUser
             // 
-            this.bt.BackColor = System.Drawing.Color.Gainsboro;
-            this.bt.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bt.FlatAppearance.BorderSize = 0;
-            this.bt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.bt.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.bt.ForeColor = System.Drawing.Color.Black;
-            this.bt.Location = new System.Drawing.Point(442, 290);
-            this.bt.Name = "bt";
-            this.bt.Size = new System.Drawing.Size(115, 42);
-            this.bt.TabIndex = 4;
-            this.bt.Text = "Thoát";
-            this.bt.UseVisualStyleBackColor = false;
+            this.lblUser.AutoSize = true;
+            this.lblUser.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblUser.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
+            this.lblUser.Location = new System.Drawing.Point(63, 147);
+            this.lblUser.Name = "lblUser";
+            this.lblUser.Size = new System.Drawing.Size(145, 28);
+            this.lblUser.TabIndex = 6;
+            this.lblUser.Text = "Tên tài khoản:";
             // 
-            // dn
+            // tentk
             // 
-            this.dn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(122)))), ((int)(((byte)(204)))));
-            this.dn.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.dn.FlatAppearance.BorderSize = 0;
-            this.dn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.dn.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
-            this.dn.ForeColor = System.Drawing.Color.White;
-            this.dn.Location = new System.Drawing.Point(132, 290);
-            this.dn.Name = "dn";
-            this.dn.Size = new System.Drawing.Size(205, 42);
-            this.dn.TabIndex = 3;
-            this.dn.Text = "ĐĂNG NHẬP";
-            this.dn.UseVisualStyleBackColor = false;
-            this.dn.Click += new System.EventHandler(this.dn_Click);
+            this.tentk.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.tentk.Location = new System.Drawing.Point(63, 175);
+            this.tentk.Name = "tentk";
+            this.tentk.Size = new System.Drawing.Size(345, 37);
+            this.tentk.TabIndex = 5;
+            // 
+            // lblPass
+            // 
+            this.lblPass.AutoSize = true;
+            this.lblPass.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.lblPass.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
+            this.lblPass.Location = new System.Drawing.Point(63, 219);
+            this.lblPass.Name = "lblPass";
+            this.lblPass.Size = new System.Drawing.Size(107, 28);
+            this.lblPass.TabIndex = 4;
+            this.lblPass.Text = "Mật khẩu:";
+            // 
+            // mk
+            // 
+            this.mk.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.mk.Location = new System.Drawing.Point(63, 247);
+            this.mk.Name = "mk";
+            this.mk.Size = new System.Drawing.Size(345, 37);
+            this.mk.TabIndex = 3;
+            this.mk.UseSystemPasswordChar = true;
             // 
             // htmk
             // 
             this.htmk.AutoSize = true;
             this.htmk.Font = new System.Drawing.Font("Segoe UI", 9.5F);
-            this.htmk.Location = new System.Drawing.Point(50, 245);
+            this.htmk.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(93)))), ((int)(((byte)(64)))), ((int)(((byte)(55)))));
+            this.htmk.Location = new System.Drawing.Point(63, 285);
             this.htmk.Name = "htmk";
             this.htmk.Size = new System.Drawing.Size(187, 29);
             this.htmk.TabIndex = 2;
             this.htmk.Text = "Hiển thị mật khẩu";
             // 
-            // mk
+            // dn
             // 
-            this.mk.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.mk.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.mk.Location = new System.Drawing.Point(50, 205);
-            this.mk.Name = "mk";
-            this.mk.Size = new System.Drawing.Size(330, 37);
-            this.mk.TabIndex = 1;
-            this.mk.UseSystemPasswordChar = true;
+            this.dn.Location = new System.Drawing.Point(63, 327);
+            this.dn.Name = "dn";
+            this.dn.Size = new System.Drawing.Size(165, 44);
+            this.dn.TabIndex = 1;
+            this.dn.Text = "ĐĂNG NHẬP";
             // 
-            // lmk
+            // bt
             // 
-            this.lmk.AutoSize = true;
-            this.lmk.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.lmk.Location = new System.Drawing.Point(50, 178);
-            this.lmk.Name = "lmk";
-            this.lmk.Size = new System.Drawing.Size(107, 28);
-            this.lmk.TabIndex = 5;
-            this.lmk.Text = "Mật khẩu:";
-            // 
-            // tk
-            // 
-            this.tk.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tk.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.tk.Location = new System.Drawing.Point(50, 132);
-            this.tk.Name = "tk";
-            this.tk.Size = new System.Drawing.Size(330, 37);
-            this.tk.TabIndex = 0;
-            // 
-            // ltk
-            // 
-            this.ltk.AutoSize = true;
-            this.ltk.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.ltk.Location = new System.Drawing.Point(50, 105);
-            this.ltk.Name = "ltk";
-            this.ltk.Size = new System.Drawing.Size(157, 28);
-            this.ltk.TabIndex = 6;
-            this.ltk.Text = "Tên đăng nhập:";
-            // 
-            // lblTitle
-            // 
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.lblTitle.Location = new System.Drawing.Point(40, 35);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(612, 45);
-            this.lblTitle.TabIndex = 7;
-            this.lblTitle.Text = "ĐĂNG NHẬP HỆ THỐNG";
-            this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.bt.Location = new System.Drawing.Point(243, 327);
+            this.bt.Name = "bt";
+            this.bt.Size = new System.Drawing.Size(165, 44);
+            this.bt.TabIndex = 0;
+            this.bt.Text = "QUAY LẠI";
             // 
             // DangNhap
             // 
             this.AcceptButton = this.dn;
-            this.ClientSize = new System.Drawing.Size(1053, 568);
-            this.Controls.Add(this.pnlRight);
-            this.Controls.Add(this.pnlLeft);
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(247)))), ((int)(((byte)(242)))));
+            this.ClientSize = new System.Drawing.Size(498, 411);
+            this.Controls.Add(this.bt);
+            this.Controls.Add(this.dn);
+            this.Controls.Add(this.htmk);
+            this.Controls.Add(this.mk);
+            this.Controls.Add(this.lblPass);
+            this.Controls.Add(this.tentk);
+            this.Controls.Add(this.lblUser);
+            this.Controls.Add(this.pnlHeader);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "DangNhap";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Đăng nhập - Gác Xép Tháng Tư";
-            this.pnlLeft.ResumeLayout(false);
-            this.pnlRight.ResumeLayout(false);
-            this.pnlRight.PerformLayout();
+            this.Text = "Đăng nhập hệ thống";
+            this.pnlHeader.ResumeLayout(false);
+            this.pnlHeader.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
     }

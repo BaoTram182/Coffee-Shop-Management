@@ -1,86 +1,87 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
 {
     public partial class DangNhap : Form
     {
-        private readonly string strKetNoi = @"Data Source=localhost\SQLEXPRESS;Initial Catalog=CoffeeShopManagement;Integrated Security=True";
-
         public DangNhap()
         {
             InitializeComponent();
+            TrangTriGiaoDien();
+
+            htmk.CheckedChanged += (s, e) =>
+            {
+                mk.UseSystemPasswordChar = !htmk.Checked;
+            };
 
             dn.Click += dn_Click;
-            bt.Click += bt_Click;
-            htmk.CheckedChanged += htmk_CheckedChanged;
+            bt.Click += (s, e) => this.Close();
         }
 
-        private void htmk_CheckedChanged(object sender, EventArgs e)
+        private void TrangTriGiaoDien()
         {
-            mk.UseSystemPasswordChar = !htmk.Checked;
+            this.BackColor = CoffeeTheme.CreamBg;
+
+            // Icon ly cà phê vector tiệp màu với thanh header nâu Espresso
+            PictureBox picLogo = new PictureBox
+            {
+                Size = new Size(36, 36),
+                Location = new Point(20, 28),
+                BackColor = Color.FromArgb(62, 39, 35),
+                Image = CoffeeIcons.CoffeeCup(Color.FromArgb(255, 224, 130), 34)
+            };
+            this.Controls.Add(picLogo);
+            picLogo.BringToFront();
+
+            UIHelper.StyleFlatRoundedButton(dn, CoffeeTheme.EspressoDark, Color.FromArgb(93, 64, 55), Color.White);
+            UIHelper.StyleFlatRoundedButton(bt, Color.FromArgb(224, 220, 215), Color.FromArgb(200, 195, 190), Color.FromArgb(60, 60, 60));
         }
 
         private void dn_Click(object sender, EventArgs e)
         {
-            string tenTK = tk.Text.Trim();
-            string matKhau = mk.Text;
+            string tenTK = tentk.Text.Trim();
+            string matKhau = mk.Text.Trim();
 
             if (string.IsNullOrEmpty(tenTK) || string.IsNullOrEmpty(matKhau))
             {
-                MessageBox.Show("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                tk.Focus();
+                MessageBox.Show("Vui lòng nhập đầy đủ Tên tài khoản và Mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                using (SqlConnection conn = new SqlConnection(strKetNoi))
+                DataTable dt = ketnoi.LayDuLieu(
+                    "SELECT * FROM TaiKhoan WHERE TenTK = @TenTK AND MK = @MK",
+                    new[] {
+                        new SqlParameter("@TenTK", tenTK),
+                        new SqlParameter("@MK", matKhau)
+                    });
+
+                if (dt.Rows.Count > 0)
                 {
-                    conn.Open();
-                    string query = "SELECT TenTK, Quyen FROM TaiKhoan WHERE TenTK = @TenTK AND MK = @MK";
-                    SqlCommand cmd = new SqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@TenTK", tenTK);
-                    cmd.Parameters.AddWithValue("@MK", matKhau);
+                    string quyen = dt.Columns.Contains("Quyen") && dt.Rows[0]["Quyen"] != DBNull.Value
+                        ? dt.Rows[0]["Quyen"].ToString()
+                        : "Nhân viên";
 
-                    SqlDataAdapter da = new SqlDataAdapter(cmd);
-                    DataTable dt = new DataTable();
-                    da.Fill(dt);
-
-                    if (dt.Rows.Count > 0)
-                    {
-                        string tkdung = dt.Rows[0]["TenTK"].ToString();
-                        string quyen = dt.Rows[0]["Quyen"].ToString();
-
-                        BanHang frmBanHang = new BanHang(tkdung);
-                        this.Hide();
-                        frmBanHang.ShowDialog();
-
-                        mk.Clear();
-                        this.Show();
-                        tk.Focus();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Sai tên đăng nhập hoặc mật khẩu!", "Đăng nhập thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        mk.Clear();
-                        mk.Focus();
-                    }
+                    BanHang frmBanHang = new BanHang(tenTK, quyen);
+                    this.Hide();
+                    frmBanHang.ShowDialog();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("Sai tên tài khoản hoặc mật khẩu!", "Đăng nhập thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    mk.Clear();
+                    mk.Focus();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi kết nối cơ sở dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void bt_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Bạn có chắc muốn thoát không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                this.Close();
+                MessageBox.Show("Lỗi kết nối CSDL: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

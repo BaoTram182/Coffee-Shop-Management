@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
@@ -10,86 +11,84 @@ namespace Coffee_Shop_Management
         public DangKy()
         {
             InitializeComponent();
-
-            q.SelectedIndex = 0;
+            TrangTriGiaoDien();
+            quyen.SelectedIndex = 0; // Mặc định chọn "Nhân viên"
 
             htmk.CheckedChanged += (s, e) =>
             {
-                bool hien = htmk.Checked;
-                mk.UseSystemPasswordChar = !hien;
-                xnmk.UseSystemPasswordChar = !hien;
+                mk.UseSystemPasswordChar = !htmk.Checked;
+                nlmk.UseSystemPasswordChar = !htmk.Checked;
             };
 
             dk.Click += dk_Click;
-            bh.Click += (s, e) => this.Close();
+            bt.Click += (s, e) => this.Close();
+        }
+
+        private void TrangTriGiaoDien()
+        {
+            this.BackColor = CoffeeTheme.CreamBg;
+
+            PictureBox picLogo = new PictureBox
+            {
+                Size = new Size(36, 36),
+                Location = new Point(20, 28),
+                BackColor = Color.FromArgb(62, 39, 35),
+                Image = CoffeeIcons.CoffeeCup(Color.FromArgb(255, 224, 130), 34)
+            };
+            this.Controls.Add(picLogo);
+            picLogo.BringToFront();
+
+            UIHelper.StyleFlatRoundedButton(dk, CoffeeTheme.SuccessGreen, Color.FromArgb(67, 160, 71), Color.White);
+            UIHelper.StyleFlatRoundedButton(bt, Color.FromArgb(224, 220, 215), Color.FromArgb(200, 195, 190), Color.FromArgb(60, 60, 60));
         }
 
         private void dk_Click(object sender, EventArgs e)
         {
-            string TenTK = tentk.Text.Trim();
-            string MatKhau = mk.Text;
-            string XacNhan = xnmk.Text;
-            string Quyen = q.SelectedItem?.ToString() ?? "Nhân viên";
+            string tenTK = tentk.Text.Trim();
+            string matKhau = mk.Text.Trim();
+            string xacNhanMK = nlmk.Text.Trim();
+            string quyenChon = quyen.SelectedItem?.ToString() ?? "Nhân viên";
 
-            if (string.IsNullOrEmpty(TenTK) || string.IsNullOrEmpty(MatKhau) || string.IsNullOrEmpty(XacNhan))
+            if (string.IsNullOrEmpty(tenTK) || string.IsNullOrEmpty(matKhau) || string.IsNullOrEmpty(xacNhanMK))
             {
-                MessageBox.Show("Vui lòng nhập đầy đủ thông tin tài khoản và mật khẩu!", "Thiếu thông tin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                tentk.Focus();
+                MessageBox.Show("Vui lòng điền đầy đủ thông tin!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (TenTK.Contains(" "))
+            if (matKhau != xacNhanMK)
             {
-                MessageBox.Show("Tên đăng nhập không được chứa khoảng trắng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                tentk.Focus();
-                return;
-            }
-
-            if (MatKhau != XacNhan)
-            {
-                MessageBox.Show("Mật khẩu xác nhận không trùng khớp!", "Lỗi nhập liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                xnmk.Clear();
-                xnmk.Focus();
+                MessageBox.Show("Mật khẩu xác nhận không khớp!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                nlmk.Focus();
                 return;
             }
 
             try
             {
-                // 2. Kiểm tra tên tài khoản đã tồn tại trong dbo.TaiKhoan chưa
                 DataTable dtCheck = ketnoi.LayDuLieu(
-                    "SELECT TenTK FROM TaiKhoan WHERE TenTK = @TenTK",
-                    new[] { new SqlParameter("@TenTK", TenTK) });
+                    "SELECT * FROM TaiKhoan WHERE TenTK = @TenTK",
+                    new[] { new SqlParameter("@TenTK", tenTK) });
 
                 if (dtCheck.Rows.Count > 0)
                 {
-                    MessageBox.Show($"Tên tài khoản '{TenTK}' đã tồn tại! Vui lòng chọn tên khác.", "Trùng tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    tentk.SelectAll();
+                    MessageBox.Show("Tên tài khoản này đã tồn tại, vui lòng chọn tên khác!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     tentk.Focus();
                     return;
                 }
 
-                int kq = ketnoi.ThucThiLenh(
+                ketnoi.ThucThiLenh(
                     "INSERT INTO TaiKhoan (TenTK, MK, Quyen) VALUES (@TenTK, @MK, @Quyen)",
                     new[] {
-                        new SqlParameter("@TenTK", TenTK),
-                        new SqlParameter("@MK", MatKhau),
-                        new SqlParameter("@Quyen", Quyen)
+                        new SqlParameter("@TenTK", tenTK),
+                        new SqlParameter("@MK", matKhau),
+                        new SqlParameter("@Quyen", quyenChon)
                     });
 
-                if (kq > 0)
-                {
-                    MessageBox.Show($"Đã tạo thành công tài khoản '{TenTK}' với quyền [{Quyen}]!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    tentk.Clear();
-                    mk.Clear();
-                    xnmk.Clear();
-                    q.SelectedIndex = 0;
-                    tentk.Focus();
-                }
+                MessageBox.Show($"Đăng ký tài khoản '{tenTK}' ({quyenChon}) thành công!", "Chúc mừng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi kết nối cơ sở dữ liệu: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khi đăng ký: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
