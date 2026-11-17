@@ -23,7 +23,11 @@ namespace Coffee_Shop_Management
             {
                 DangKy frmDangKy = new DangKy();
                 this.Hide();
-                frmDangKy.ShowDialog();
+                if (frmDangKy.ShowDialog() == DialogResult.OK)
+                {
+                    DangNhap frmDangNhap = new DangNhap(frmDangKy.TenTaiKhoanVuaTao);
+                    frmDangNhap.ShowDialog();
+                }
                 if (!this.IsDisposed) this.Show();
             };
 

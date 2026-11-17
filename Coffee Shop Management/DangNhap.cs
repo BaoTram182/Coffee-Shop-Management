@@ -8,10 +8,16 @@ namespace Coffee_Shop_Management
 {
     public partial class DangNhap : Form
     {
-        public DangNhap()
+        public DangNhap(string tenTKMacDinh = "")
         {
             InitializeComponent();
             TrangTriGiaoDien();
+
+            if (!string.IsNullOrEmpty(tenTKMacDinh))
+            {
+                tentk.Text = tenTKMacDinh;
+                this.Shown += (s, e) => mk.Focus();
+            }
 
             htmk.CheckedChanged += (s, e) =>
             {
@@ -26,7 +32,6 @@ namespace Coffee_Shop_Management
         {
             this.BackColor = CoffeeTheme.CreamBg;
 
-            // Icon ly cà phê vector tiệp màu với thanh header nâu Espresso
             PictureBox picLogo = new PictureBox
             {
                 Size = new Size(36, 36),

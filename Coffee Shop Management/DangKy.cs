@@ -8,6 +8,8 @@ namespace Coffee_Shop_Management
 {
     public partial class DangKy : Form
     {
+        public string TenTaiKhoanVuaTao { get; private set; } = "";
+
         public DangKy()
         {
             InitializeComponent();
@@ -84,6 +86,8 @@ namespace Coffee_Shop_Management
                     });
 
                 MessageBox.Show($"Đăng ký tài khoản '{tenTK}' ({quyenChon}) thành công!", "Chúc mừng", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                TenTaiKhoanVuaTao = tenTK;
+                this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             catch (Exception ex)

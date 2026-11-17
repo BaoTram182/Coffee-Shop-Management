@@ -27,6 +27,27 @@ namespace Coffee_Shop_Management
             mnuTraCuuHD.Visible = isAdmin;
             mnuTraCuuHD.Enabled = isAdmin;
 
+            ToolStripMenuItem mnuQuanLy = new ToolStripMenuItem("Quản lý Thực đơn & Bàn")
+            {
+                ForeColor = Color.FromArgb(165, 214, 167),
+                Image = CoffeeIcons.Edit(Color.FromArgb(165, 214, 167), 18),
+                Visible = isAdmin,
+                Enabled = isAdmin
+            };
+            mnuQuanLy.Click += (s, e) =>
+            {
+                if (!QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Chỉ tài khoản Admin mới có quyền truy cập mục Quản lý!", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                new QuanLy().ShowDialog();
+                LoadDanhSachBan();
+                LoadDanhMucMon();
+            };
+            menuStrip1.Items.Insert(1, mnuQuanLy);
+
+            // Sự kiện Tra cứu hóa đơn & Đăng xuất trên thanh MenuStrip
             mnuTraCuuHD.Click += (s, e) =>
             {
                 if (!QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase))
