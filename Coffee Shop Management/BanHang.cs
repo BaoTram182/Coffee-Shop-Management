@@ -21,13 +21,16 @@ namespace Coffee_Shop_Management
 
             TrangTriGiaoDienBanHang();
 
+            // 1. Nút XÓA (bx) mở công khai (public) cho tất cả mọi người
             bx.Enabled = true;
 
+            // 2. Phân quyền Admin: Chỉ Admin mới thấy & truy cập Tra cứu hóa đơn + Quản lý Thực đơn & Bàn
             bool isAdmin = QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase);
             mnuTraCuuHD.Visible = isAdmin;
             mnuTraCuuHD.Enabled = isAdmin;
 
-            ToolStripMenuItem mnuQuanLy = new ToolStripMenuItem("Quản lý Thực đơn & Bàn")
+            // Mục Quản lý Thực đơn & Bàn trên MenuStrip (Dùng && để hiển thị đúng ký tự &)
+            ToolStripMenuItem mnuQuanLy = new ToolStripMenuItem("Quản lý Thực đơn && Bàn")
             {
                 ForeColor = Color.FromArgb(165, 214, 167),
                 Image = CoffeeIcons.Edit(Color.FromArgb(165, 214, 167), 18),
@@ -46,6 +49,15 @@ namespace Coffee_Shop_Management
                 LoadDanhMucMon();
             };
             menuStrip1.Items.Insert(1, mnuQuanLy);
+
+            // Mục Chuyển / Gộp bàn trên thanh MenuStrip (Mở cho tất cả nhân viên)
+            ToolStripMenuItem mnuChuyenBan = new ToolStripMenuItem("Chuyển / Gộp bàn")
+            {
+                ForeColor = Color.FromArgb(129, 212, 250),
+                Image = CoffeeIcons.EmptyTable(Color.FromArgb(129, 212, 250), 18)
+            };
+            mnuChuyenBan.Click += (s, e) => MoHopThoaiChuyenGopBan();
+            menuStrip1.Items.Insert(isAdmin ? 2 : 1, mnuChuyenBan);
 
             // Sự kiện Tra cứu hóa đơn & Đăng xuất trên thanh MenuStrip
             mnuTraCuuHD.Click += (s, e) =>
@@ -90,6 +102,7 @@ namespace Coffee_Shop_Management
                 }
             };
 
+            // ContextMenu chuột phải & phím Delete mở công khai cho tất cả tài khoản
             ContextMenuStrip menuHoaDon = new ContextMenuStrip();
             ToolStripMenuItem itemTang1 = new ToolStripMenuItem("Tăng 1 phần (+1)");
             ToolStripMenuItem itemGiam1 = new ToolStripMenuItem("Giảm 1 phần (-1)");
@@ -125,14 +138,18 @@ namespace Coffee_Shop_Management
         {
             this.BackColor = CoffeeTheme.CreamBg;
 
+            // Thanh MenuStrip tông nâu Espresso + Renderer dịu mắt khi hover
             menuStrip1.BackColor = CoffeeTheme.EspressoDark;
             menuStrip1.ForeColor = Color.White;
             menuStrip1.Padding = new Padding(10, 5, 10, 5);
+            menuStrip1.Renderer = new CoffeeMenuRenderer();
+
             mnuTraCuuHD.Text = "Tra cứu hóa đơn (F3)";
             mnuTraCuuHD.ForeColor = Color.FromArgb(255, 224, 130);
             mnuTraCuuHD.Image = CoffeeIcons.Search(Color.FromArgb(255, 224, 130), 18);
             mnuDangXuat.ForeColor = Color.FromArgb(255, 171, 145);
 
+            // Màu chữ các GroupBox
             grpban.ForeColor = CoffeeTheme.EspressoDark;
             gcthd.ForeColor = CoffeeTheme.EspressoDark;
             grpChonMon.ForeColor = CoffeeTheme.EspressoDark;
@@ -142,11 +159,13 @@ namespace Coffee_Shop_Management
             lsvhd.BackColor = Color.White;
             lsvhd.BorderStyle = BorderStyle.None;
 
+            // Gắn màu + Icon vector cho 4 nút chức năng
             GanIconNut(btm, CoffeeTheme.PrimaryBlue, CoffeeIcons.Plus(Color.White, 16), " THÊM");
             GanIconNut(bs, CoffeeTheme.WarningOrange, CoffeeIcons.Edit(Color.White, 16), " SỬA");
             GanIconNut(bx, CoffeeTheme.DangerRed, CoffeeIcons.Trash(Color.White, 16), " XÓA");
             GanIconNut(btt, CoffeeTheme.SuccessGreen, CoffeeIcons.Check(Color.White, 22), " THANH TOÁN");
 
+            // Ô tổng tiền
             tt.BackColor = CoffeeTheme.CreamBg;
             tt.BorderStyle = BorderStyle.FixedSingle;
         }
@@ -593,5 +612,178 @@ namespace Coffee_Shop_Management
                 MessageBox.Show("Lỗi khi thanh toán: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        // ==================== CHỨC NĂNG CHUYỂN / GỘP BÀN ====================
+        private void MoHopThoaiChuyenGopBan()
+        {
+            if (idbdc == -1)
+            {
+                MessageBox.Show("Vui lòng chọn bàn nguồn cần chuyển/gộp trước!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            DataTable dtHDNguon = ketnoi.LayDuLieu(
+                "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
+                new[] { new SqlParameter("@IDb", idbdc) });
+
+            if (dtHDNguon.Rows.Count == 0)
+            {
+                MessageBox.Show("Bàn đang chọn hiện trống, không có hóa đơn để chuyển hoặc gộp!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            DataTable dtBanDich = ketnoi.LayDuLieu(
+                "SELECT ID, TenBan + N' [' + TrangThai + N']' AS HienThi FROM Ban WHERE ID <> @IDb",
+                new[] { new SqlParameter("@IDb", idbdc) });
+
+            if (dtBanDich.Rows.Count == 0) return;
+
+            using (Form dlg = new Form())
+            {
+                dlg.Text = "Chuyển bàn / Gộp bàn";
+                dlg.Size = new Size(360, 195);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+                dlg.BackColor = CoffeeTheme.CreamBg;
+
+                Label lbl = new Label
+                {
+                    Text = $"Từ {lbdc.Text.Replace("Đang chọn: ", "")} chuyển / gộp sang:",
+                    Location = new Point(22, 20),
+                    AutoSize = true,
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    ForeColor = CoffeeTheme.EspressoDark
+                };
+
+                ComboBox cbBanDich = new ComboBox
+                {
+                    Location = new Point(22, 52),
+                    Width = 300,
+                    DropDownStyle = ComboBoxStyle.DropDownList,
+                    Font = new Font("Segoe UI", 10.5F),
+                    DisplayMember = "HienThi",
+                    ValueMember = "ID",
+                    DataSource = dtBanDich
+                };
+
+                Button btnXacNhan = new Button
+                {
+                    Text = "XÁC NHẬN",
+                    Location = new Point(112, 102),
+                    Size = new Size(120, 38),
+                    DialogResult = DialogResult.OK
+                };
+                UIHelper.StyleFlatRoundedButton(btnXacNhan, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229), Color.White);
+
+                dlg.Controls.AddRange(new Control[] { lbl, cbBanDich, btnXacNhan });
+                dlg.AcceptButton = btnXacNhan;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK && cbBanDich.SelectedValue != null)
+                {
+                    int idBanDich = Convert.ToInt32(cbBanDich.SelectedValue);
+                    string tenBanDich = cbBanDich.Text.Split('[')[0].Trim();
+                    ChuyenHoacGopBan(idbdc, idBanDich, tenBanDich);
+                }
+            }
+        }
+
+        private void ChuyenHoacGopBan(int idBanNguon, int idBanDich, string tenBanDich)
+        {
+            try
+            {
+                int idHDNguon = Convert.ToInt32(ketnoi.LayGiaTriDon(
+                    "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
+                    new[] { new SqlParameter("@IDb", idBanNguon) }));
+
+                DataTable dtHDDich = ketnoi.LayDuLieu(
+                    "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
+                    new[] { new SqlParameter("@IDb", idBanDich) });
+
+                if (dtHDDich.Rows.Count == 0)
+                {
+                    ketnoi.ThucThiLenh(
+                        "UPDATE HoaDon SET IDb = @IDDich WHERE ID = @IDhd",
+                        new[] { new SqlParameter("@IDDich", idBanDich), new SqlParameter("@IDhd", idHDNguon) });
+
+                    ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanNguon) });
+                    ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Có người' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanDich) });
+
+                    MessageBox.Show($"Đã chuyển sang {tenBanDich} thành công!", "Chuyển bàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    int idHDDich = Convert.ToInt32(dtHDDich.Rows[0]["ID"]);
+                    DataTable dtMonNguon = ketnoi.LayDuLieu(
+                        "SELECT IDm, SoLuong, DonGia FROM CTHD WHERE IDhd = @IDhd",
+                        new[] { new SqlParameter("@IDhd", idHDNguon) });
+
+                    foreach (DataRow row in dtMonNguon.Rows)
+                    {
+                        int idMon = Convert.ToInt32(row["IDm"]);
+                        int soLuong = Convert.ToInt32(row["SoLuong"]);
+                        decimal donGia = Convert.ToDecimal(row["DonGia"]);
+
+                        DataTable dtTrung = ketnoi.LayDuLieu(
+                            "SELECT ID FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
+                            new[] { new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon) });
+
+                        if (dtTrung.Rows.Count > 0)
+                        {
+                            ketnoi.ThucThiLenh(
+                                "UPDATE CTHD SET SoLuong = SoLuong + @SL WHERE IDhd = @IDhd AND IDm = @IDm",
+                                new[] { new SqlParameter("@SL", soLuong), new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon) });
+                        }
+                        else
+                        {
+                            ketnoi.ThucThiLenh(
+                                "INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, @SL, @DonGia)",
+                                new[] { new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon), new SqlParameter("@SL", soLuong), new SqlParameter("@DonGia", donGia) });
+                        }
+                    }
+
+                    ketnoi.ThucThiLenh("DELETE FROM CTHD WHERE IDhd = @IDhd", new[] { new SqlParameter("@IDhd", idHDNguon) });
+                    ketnoi.ThucThiLenh("DELETE FROM HoaDon WHERE ID = @IDhd", new[] { new SqlParameter("@IDhd", idHDNguon) });
+                    ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanNguon) });
+
+                    ketnoi.ThucThiLenh(
+                        "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
+                        new[] { new SqlParameter("@IDhd", idHDDich) });
+
+                    MessageBox.Show($"Đã gộp hóa đơn vào {tenBanDich} thành công!", "Gộp bàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                idbdc = idBanDich;
+                lbdc.Text = $"Đang chọn: {tenBanDich}";
+                LoadDanhSachBan();
+                HienThiHoaDon(idbdc);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi chuyển/gộp bàn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    public class CoffeeMenuRenderer : ToolStripProfessionalRenderer
+    {
+        public CoffeeMenuRenderer() : base(new CoffeeColorTable()) { }
+
+        protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+        {
+            e.TextColor = e.Item.ForeColor;
+            base.OnRenderItemText(e);
+        }
+    }
+
+    public class CoffeeColorTable : ProfessionalColorTable
+    {
+        public override Color MenuItemSelected => Color.FromArgb(93, 64, 55);
+        public override Color MenuItemSelectedGradientBegin => Color.FromArgb(93, 64, 55);
+        public override Color MenuItemSelectedGradientEnd => Color.FromArgb(93, 64, 55);
+        public override Color MenuItemBorder => Color.FromArgb(141, 110, 99);
+        public override Color MenuItemPressedGradientBegin => Color.FromArgb(78, 52, 46);
+        public override Color MenuItemPressedGradientEnd => Color.FromArgb(78, 52, 46);
     }
 }
