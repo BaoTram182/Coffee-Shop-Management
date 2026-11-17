@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Drawing.Printing;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
@@ -9,6 +10,7 @@ namespace Coffee_Shop_Management
     public partial class BanHang : Form
     {
         private int idbdc = -1;
+        private int idDanhMucDangChon = -1;
         private readonly string TenNhanVien;
         private readonly string QuyenHan;
 
@@ -17,115 +19,18 @@ namespace Coffee_Shop_Management
             InitializeComponent();
             this.TenNhanVien = TenTK;
             this.QuyenHan = Quyen;
-            this.Text = $"Gác Xép Tháng Tư - Quản lý bán hàng | Tài khoản: {TenNhanVien} ({QuyenHan})";
+            this.Text = $"Gác Xép Tháng Tư - Touch POS | Thu ngân: {TenNhanVien} ({QuyenHan})";
+            this.DoubleBuffered = true;
 
-            TrangTriGiaoDienBanHang();
-
-            // 1. Nút XÓA (bx) mở công khai (public) cho tất cả mọi người
-            bx.Enabled = true;
-
-            // 2. Phân quyền Admin: Chỉ Admin mới thấy & truy cập Tra cứu hóa đơn + Quản lý Thực đơn & Bàn
-            bool isAdmin = QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase);
-            mnuTraCuuHD.Visible = isAdmin;
-            mnuTraCuuHD.Enabled = isAdmin;
-
-            // Mục Quản lý Thực đơn & Bàn trên MenuStrip (Dùng && để hiển thị đúng ký tự &)
-            ToolStripMenuItem mnuQuanLy = new ToolStripMenuItem("Quản lý Thực đơn && Bàn")
-            {
-                ForeColor = Color.FromArgb(165, 214, 167),
-                Image = CoffeeIcons.Edit(Color.FromArgb(165, 214, 167), 18),
-                Visible = isAdmin,
-                Enabled = isAdmin
-            };
-            mnuQuanLy.Click += (s, e) =>
-            {
-                if (!QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    MessageBox.Show("Chỉ tài khoản Admin mới có quyền truy cập mục Quản lý!", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                new QuanLy().ShowDialog();
-                LoadDanhSachBan();
-                LoadDanhMucMon();
-            };
-            menuStrip1.Items.Insert(1, mnuQuanLy);
-
-            // Mục Chuyển / Gộp bàn trên thanh MenuStrip (Mở cho tất cả nhân viên)
-            ToolStripMenuItem mnuChuyenBan = new ToolStripMenuItem("Chuyển / Gộp bàn")
-            {
-                ForeColor = Color.FromArgb(129, 212, 250),
-                Image = CoffeeIcons.EmptyTable(Color.FromArgb(129, 212, 250), 18)
-            };
-            mnuChuyenBan.Click += (s, e) => MoHopThoaiChuyenGopBan();
-            menuStrip1.Items.Insert(isAdmin ? 2 : 1, mnuChuyenBan);
-
-            // Sự kiện Tra cứu hóa đơn & Đăng xuất trên thanh MenuStrip
-            mnuTraCuuHD.Click += (s, e) =>
-            {
-                if (!QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    MessageBox.Show("Bạn không có quyền truy cập chức năng Tra cứu hóa đơn!", "Phân quyền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-                new TimKiemHD().ShowDialog();
-            };
-
-            mnuDangXuat.Click += (s, e) =>
-            {
-                if (MessageBox.Show("Bạn có muốn đăng xuất không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    this.Close();
-                }
-            };
-
-            dm.SelectedIndexChanged += dm_SelectedIndexChanged;
-            btm.Click += btm_Click;
-            bs.Click += bs_Click;
-            bx.Click += (s, e) => XoaMonDangChon();
-            btt.Click += btt_Click;
-
-            lsvhd.SelectedIndexChanged += (s, e) =>
-            {
-                if (lsvhd.SelectedItems.Count == 0) return;
-                string tenMonChon = lsvhd.SelectedItems[0].SubItems[0].Text;
-                int slChon = int.Parse(lsvhd.SelectedItems[0].SubItems[1].Text);
-
-                DataTable dtMon = ketnoi.LayDuLieu(
-                    "SELECT ID, IDdmm FROM Menu WHERE Tenmon = @Ten",
-                    new[] { new SqlParameter("@Ten", tenMonChon) });
-
-                if (dtMon.Rows.Count > 0)
-                {
-                    dm.SelectedValue = dtMon.Rows[0]["IDdmm"];
-                    tm.SelectedValue = dtMon.Rows[0]["ID"];
-                    sl.Value = slChon;
-                }
-            };
-
-            // ContextMenu chuột phải & phím Delete mở công khai cho tất cả tài khoản
-            ContextMenuStrip menuHoaDon = new ContextMenuStrip();
-            ToolStripMenuItem itemTang1 = new ToolStripMenuItem("Tăng 1 phần (+1)");
-            ToolStripMenuItem itemGiam1 = new ToolStripMenuItem("Giảm 1 phần (-1)");
-            ToolStripMenuItem itemXoaMon = new ToolStripMenuItem("Xóa món này (Delete)");
-
-            itemTang1.Click += (s, e) => CapNhatSoLuongNhanh(1);
-            itemGiam1.Click += (s, e) => CapNhatSoLuongNhanh(-1);
-            itemXoaMon.Click += (s, e) => XoaMonDangChon();
-
-            menuHoaDon.Items.AddRange(new ToolStripItem[] { itemTang1, itemGiam1, new ToolStripSeparator(), itemXoaMon });
-            lsvhd.ContextMenuStrip = menuHoaDon;
-
-            lsvhd.KeyDown += (s, e) =>
-            {
-                if (e.KeyCode == Keys.Delete) XoaMonDangChon();
-            };
+            ThietLapThanhMenuTouch();
+            KhoiTaoSuKienGiaoDienPOS();
 
             Load += (s, e) =>
             {
                 try
                 {
                     LoadDanhSachBan();
-                    LoadDanhMucMon();
+                    LoadThanhDanhMucPOS();
                 }
                 catch (Exception ex)
                 {
@@ -134,54 +39,176 @@ namespace Coffee_Shop_Management
             };
         }
 
-        private void TrangTriGiaoDienBanHang()
+        private void ThietLapThanhMenuTouch()
         {
-            this.BackColor = CoffeeTheme.CreamBg;
+            bool isAdmin = QuyenHan.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
-            // Thanh MenuStrip tông nâu Espresso + Renderer dịu mắt khi hover
-            menuStrip1.BackColor = CoffeeTheme.EspressoDark;
-            menuStrip1.ForeColor = Color.White;
-            menuStrip1.Padding = new Padding(10, 5, 10, 5);
             menuStrip1.Renderer = new CoffeeMenuRenderer();
 
-            mnuTraCuuHD.Text = "Tra cứu hóa đơn (F3)";
-            mnuTraCuuHD.ForeColor = Color.FromArgb(255, 224, 130);
-            mnuTraCuuHD.Image = CoffeeIcons.Search(Color.FromArgb(255, 224, 130), 18);
-            mnuDangXuat.ForeColor = Color.FromArgb(255, 171, 145);
+            mnuTraCuuHD.Text = "  Tra cứu hóa đơn  ";
+            mnuTraCuuHD.Image = CoffeeIcons.Search(Color.FromArgb(255, 224, 130), 22);
+            mnuTraCuuHD.ImageScaling = ToolStripItemImageScaling.None;
+            mnuTraCuuHD.Visible = isAdmin;
+            mnuTraCuuHD.Enabled = isAdmin;
+            mnuTraCuuHD.Click += (s, e) => new TimKiemHD().ShowDialog();
 
-            // Màu chữ các GroupBox
-            grpban.ForeColor = CoffeeTheme.EspressoDark;
-            gcthd.ForeColor = CoffeeTheme.EspressoDark;
-            grpChonMon.ForeColor = CoffeeTheme.EspressoDark;
-            gtt.ForeColor = CoffeeTheme.EspressoDark;
+            ToolStripMenuItem mnuQuanLy = new ToolStripMenuItem("  Quản lý Thực đơn && Bàn  ")
+            {
+                ForeColor = Color.FromArgb(165, 214, 167),
+                Image = CoffeeIcons.Edit(Color.FromArgb(165, 214, 167), 22),
+                ImageScaling = ToolStripItemImageScaling.None,
+                Visible = isAdmin,
+                Enabled = isAdmin
+            };
+            mnuQuanLy.Click += (s, e) =>
+            {
+                new QuanLy().ShowDialog();
+                LoadDanhSachBan();
+                LoadThanhDanhMucPOS();
+            };
+            menuStrip1.Items.Insert(1, mnuQuanLy);
 
-            sdb.BackColor = Color.White;
-            lsvhd.BackColor = Color.White;
-            lsvhd.BorderStyle = BorderStyle.None;
+            ToolStripMenuItem mnuChuyenBan = new ToolStripMenuItem("  Chuyển / Gộp bàn  ")
+            {
+                ForeColor = Color.FromArgb(129, 212, 250),
+                Image = CoffeeIcons.EmptyTable(Color.FromArgb(129, 212, 250), 22),
+                ImageScaling = ToolStripItemImageScaling.None
+            };
+            mnuChuyenBan.Click += (s, e) => MoHopThoaiChuyenGopBan();
+            menuStrip1.Items.Insert(isAdmin ? 2 : 1, mnuChuyenBan);
 
-            // Gắn màu + Icon vector cho 4 nút chức năng
-            GanIconNut(btm, CoffeeTheme.PrimaryBlue, CoffeeIcons.Plus(Color.White, 16), " THÊM");
-            GanIconNut(bs, CoffeeTheme.WarningOrange, CoffeeIcons.Edit(Color.White, 16), " SỬA");
-            GanIconNut(bx, CoffeeTheme.DangerRed, CoffeeIcons.Trash(Color.White, 16), " XÓA");
-            GanIconNut(btt, CoffeeTheme.SuccessGreen, CoffeeIcons.Check(Color.White, 22), " THANH TOÁN");
-
-            // Ô tổng tiền
-            tt.BackColor = CoffeeTheme.CreamBg;
-            tt.BorderStyle = BorderStyle.FixedSingle;
+            mnuDangXuat.Text = "  Đăng xuất  ";
+            mnuDangXuat.Click += (s, e) =>
+            {
+                if (MessageBox.Show("Bạn có muốn đăng xuất ca làm việc này không?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    this.Close();
+                }
+            };
         }
 
-        private void GanIconNut(Button btn, Color mauNen, Image icon, string chu)
+        private void KhoiTaoSuKienGiaoDienPOS()
         {
-            btn.BackColor = mauNen;
-            btn.Image = icon;
-            btn.Text = chu;
-            btn.TextImageRelation = TextImageRelation.ImageBeforeText;
-            btn.ImageAlign = ContentAlignment.MiddleCenter;
-            btn.TextAlign = ContentAlignment.MiddleCenter;
+            BatDoubleBuffer(sdb);
+            BatDoubleBuffer(flpDanhMucPOS);
+            BatDoubleBuffer(flpThucDonPOS);
+            BatDoubleBuffer(lsvhd);
+
+            KichHoatVuotCuon(sdb);
+            KichHoatVuotCuon(flpDanhMucPOS, vuotNgang: true);
+            KichHoatVuotCuon(flpThucDonPOS);
+
+            lsvhd.SmallImageList = new ImageList { ImageSize = new Size(1, 44) };
+            lsvhd.SizeChanged += (s, e) => CanChinhCotHoaDon();
+
+            btnSuaTouch.Image = CoffeeIcons.Edit(Color.White, 18);
+            btnSuaTouch.TextImageRelation = TextImageRelation.ImageBeforeText;
+
+            btnXoaTouch.Image = CoffeeIcons.Trash(Color.White, 18);
+            btnXoaTouch.TextImageRelation = TextImageRelation.ImageBeforeText;
+
+            btnThanhToanTouch.Text = "  THANH TOÁN";
+            btnThanhToanTouch.Image = CoffeeIcons.Check(Color.White, 26);
+            btnThanhToanTouch.TextImageRelation = TextImageRelation.ImageBeforeText;
+
+            GanHieuUngHover(btnThemTouch, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229));
+            GanHieuUngHover(btnSuaTouch, CoffeeTheme.WarningOrange, Color.FromArgb(251, 140, 0));
+            GanHieuUngHover(btnXoaTouch, CoffeeTheme.DangerRed, Color.FromArgb(229, 57, 53));
+            GanHieuUngHover(btnThanhToanTouch, CoffeeTheme.SuccessGreen, Color.FromArgb(67, 160, 71));
+
+            btnThemTouch.Click += (s, e) => CapNhatSoLuongNhanh(1);
+            btnSuaTouch.Click += (s, e) => MoHopThoaiSuaSoLuong();
+            btnXoaTouch.Click += (s, e) => XoaMonDangChon();
+            btnThanhToanTouch.Click += btt_Click;
+
+            CanChinhCotHoaDon();
+        }
+
+        private void GanHieuUngHover(RoundedButton btn, Color bg, Color hover)
+        {
+            btn.Cursor = Cursors.Hand;
+            btn.MouseEnter += (s, e) => btn.BackColor = hover;
+            btn.MouseLeave += (s, e) => btn.BackColor = bg;
+        }
+
+        private void CanChinhCotHoaDon()
+        {
+            if (lsvhd.Columns.Count >= 4 && lsvhd.ClientSize.Width > 80)
+            {
+                int w = lsvhd.ClientSize.Width - 4;
+                lsvhd.Columns[0].Width = (int)(w * 0.40);
+                lsvhd.Columns[1].Width = (int)(w * 0.13);
+                lsvhd.Columns[2].Width = (int)(w * 0.22);
+                lsvhd.Columns[3].Width = w - lsvhd.Columns[0].Width - lsvhd.Columns[1].Width - lsvhd.Columns[2].Width;
+            }
+        }
+
+        private void BatDoubleBuffer(Control ctrl)
+        {
+            typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(ctrl, true, null);
+        }
+
+        private void KichHoatVuotCuon(FlowLayoutPanel panel, bool vuotNgang = false)
+        {
+            bool dangGiu = false;
+            bool daVuot = false;
+            Point viTriDau = Point.Empty;
+            Point scrollDau = Point.Empty;
+
+            void GanSuKien(Control c)
+            {
+                if (c.Tag?.ToString() == "DaGanVuot") return;
+
+                c.MouseDown += (s, e) =>
+                {
+                    if (e.Button != MouseButtons.Left) return;
+                    dangGiu = true;
+                    daVuot = false;
+                    viTriDau = Cursor.Position;
+                    scrollDau = new Point(-panel.AutoScrollPosition.X, -panel.AutoScrollPosition.Y);
+                };
+
+                c.MouseMove += (s, e) =>
+                {
+                    if (!dangGiu) return;
+                    int dx = Cursor.Position.X - viTriDau.X;
+                    int dy = Cursor.Position.Y - viTriDau.Y;
+
+                    if (Math.Abs(dx) > 8 || Math.Abs(dy) > 8)
+                    {
+                        daVuot = true;
+                        panel.Tag = "DangVuot";
+                        if (vuotNgang)
+                            panel.AutoScrollPosition = new Point(scrollDau.X - dx, scrollDau.Y);
+                        else
+                            panel.AutoScrollPosition = new Point(scrollDau.X, scrollDau.Y - dy);
+                    }
+                };
+
+                c.MouseUp += (s, e) =>
+                {
+                    dangGiu = false;
+                    if (daVuot)
+                    {
+                        Timer t = new Timer { Interval = 80 };
+                        t.Tick += (ts, te) => { panel.Tag = null; t.Stop(); t.Dispose(); };
+                        t.Start();
+                    }
+                    else
+                    {
+                        panel.Tag = null;
+                    }
+                };
+            }
+
+            GanSuKien(panel);
+            panel.ControlAdded += (s, e) => GanSuKien(e.Control);
         }
 
         private void LoadDanhSachBan()
         {
+            sdb.SuspendLayout();
             sdb.Controls.Clear();
             DataTable dt = ketnoi.LayDuLieu("SELECT * FROM Ban");
 
@@ -195,19 +222,19 @@ namespace Coffee_Shop_Management
 
                 RoundedButton btn = new RoundedButton
                 {
-                    Width = 108,
-                    Height = 104,
+                    Width = 116,
+                    Height = 112,
                     Margin = new Padding(7),
-                    Padding = new Padding(0, 8, 0, 6),
-                    BorderRadius = 14,
-                    BorderSize = 2,
-                    BorderColor = isTrong ? CoffeeTheme.MintBorder : CoffeeTheme.PeachBorder,
+                    Padding = new Padding(0, 10, 0, 8),
+                    BorderRadius = 16,
+                    BorderSize = (idBan == idbdc) ? 4 : 2,
+                    BorderColor = (idBan == idbdc) ? CoffeeTheme.EspressoDark : (isTrong ? CoffeeTheme.MintBorder : CoffeeTheme.PeachBorder),
                     BackColor = isTrong ? CoffeeTheme.MintEmpty : CoffeeTheme.PeachBusy,
                     ForeColor = CoffeeTheme.EspressoDark,
-                    Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
                     Image = isTrong
-                        ? CoffeeIcons.EmptyTable(Color.FromArgb(46, 125, 50), 24)
-                        : CoffeeIcons.CoffeeCup(Color.FromArgb(216, 67, 21), 24),
+                        ? CoffeeIcons.EmptyTable(Color.FromArgb(46, 125, 50), 26)
+                        : CoffeeIcons.CoffeeCup(Color.FromArgb(216, 67, 21), 26),
                     ImageAlign = ContentAlignment.TopCenter,
                     TextImageRelation = TextImageRelation.ImageAboveText,
                     TextAlign = ContentAlignment.BottomCenter,
@@ -217,26 +244,172 @@ namespace Coffee_Shop_Management
                     Tag = new Tuple<int, string>(idBan, tenBan)
                 };
 
-                if (idBan == idbdc)
+                btn.Click += (s, e) =>
                 {
-                    btn.BorderSize = 3;
-                    btn.BorderColor = CoffeeTheme.EspressoDark;
-                }
+                    if (sdb.Tag?.ToString() == "DangVuot") return;
+                    var info = (Tuple<int, string>)btn.Tag;
+                    idbdc = info.Item1;
+                    lblTieuDeBanPOS.Text = $"ĐANG PHỤC VỤ: {info.Item2.ToUpper()}";
+                    LoadDanhSachBan();
+                    HienThiHoaDon(idbdc);
+                };
 
-                btn.Click += BtnBan_Click;
                 sdb.Controls.Add(btn);
             }
+            sdb.ResumeLayout();
         }
 
-        private void BtnBan_Click(object sender, EventArgs e)
+        private void LoadThanhDanhMucPOS()
         {
-            Button btn = sender as Button;
-            var info = (Tuple<int, string>)btn.Tag;
-            idbdc = info.Item1;
-            lbdc.Text = $"Đang chọn: {info.Item2}";
+            flpDanhMucPOS.Controls.Clear();
+            DataTable dt = ketnoi.LayDuLieu("SELECT * FROM DanhMucMon ORDER BY ID");
 
-            LoadDanhSachBan();
-            HienThiHoaDon(idbdc);
+            ThemNutDanhMucPOS(-1, "Tất cả món");
+
+            foreach (DataRow row in dt.Rows)
+            {
+                int idDM = Convert.ToInt32(row["ID"]);
+                string tenDM = row["TenDanhMuc"].ToString();
+                ThemNutDanhMucPOS(idDM, tenDM);
+            }
+
+            LoadLuoiThucDonPOS(idDanhMucDangChon);
+        }
+
+        private void ThemNutDanhMucPOS(int idDM, string tenDM)
+        {
+            bool dangChon = (idDM == idDanhMucDangChon);
+            RoundedButton btnDM = new RoundedButton
+            {
+                Height = 44,
+                AutoSize = true,
+                MinimumSize = new Size(105, 44),
+                Padding = new Padding(14, 0, 14, 0),
+                Margin = new Padding(4, 0, 4, 0),
+                BorderRadius = 12,
+                BackColor = dangChon ? CoffeeTheme.EspressoDark : Color.White,
+                ForeColor = dangChon ? Color.White : CoffeeTheme.EspressoDark,
+                BorderSize = 1,
+                BorderColor = CoffeeTheme.EspressoDark,
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Text = tenDM
+            };
+
+            btnDM.Click += (s, e) =>
+            {
+                if (flpDanhMucPOS.Tag?.ToString() == "DangVuot") return;
+                idDanhMucDangChon = idDM;
+                LoadThanhDanhMucPOS();
+            };
+
+            flpDanhMucPOS.Controls.Add(btnDM);
+        }
+
+        private void LoadLuoiThucDonPOS(int idDanhMuc)
+        {
+            flpThucDonPOS.SuspendLayout();
+            flpThucDonPOS.Controls.Clear();
+
+            DataTable dt = (idDanhMuc == -1)
+                ? ketnoi.LayDuLieu("SELECT ID, Tenmon, DonGia FROM Menu ORDER BY ID ASC")
+                : ketnoi.LayDuLieu("SELECT ID, Tenmon, DonGia FROM Menu WHERE IDdmm = @IDdmm ORDER BY ID ASC",
+                    new[] { new SqlParameter("@IDdmm", idDanhMuc) });
+
+            foreach (DataRow row in dt.Rows)
+            {
+                int idMon = Convert.ToInt32(row["ID"]);
+                string tenMon = row["Tenmon"].ToString();
+                decimal donGia = Convert.ToDecimal(row["DonGia"]);
+
+                RoundedButton cardMon = new RoundedButton
+                {
+                    Width = 156,
+                    Height = 124,
+                    Margin = new Padding(7),
+                    Padding = new Padding(6),
+                    BorderRadius = 14,
+                    BorderSize = 1,
+                    BorderColor = Color.FromArgb(215, 204, 200),
+                    BackColor = CoffeeTheme.CreamBg,
+                    ForeColor = CoffeeTheme.EspressoDark,
+                    Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Text = $"{tenMon}\n{donGia:N0} đ"
+                };
+
+                cardMon.MouseDown += (s, e) => cardMon.BackColor = Color.FromArgb(255, 224, 178);
+                cardMon.MouseUp += (s, e) => cardMon.BackColor = CoffeeTheme.CreamBg;
+
+                cardMon.Click += (s, e) =>
+                {
+                    if (flpThucDonPOS.Tag?.ToString() == "DangVuot") return;
+                    ThemMonNhanh1Cham(idMon, donGia);
+                };
+
+                flpThucDonPOS.Controls.Add(cardMon);
+            }
+            flpThucDonPOS.ResumeLayout();
+        }
+
+        private void ThemMonNhanh1Cham(int idMon, decimal donGia)
+        {
+            try
+            {
+                if (idbdc == -1)
+                {
+                    MessageBox.Show("Vui lòng chạm chọn một bàn ở cột bên trái trước!", "Chưa chọn bàn", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                DataTable dtHD = ketnoi.LayDuLieu(
+                    "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
+                    new[] { new SqlParameter("@IDb", idbdc) });
+
+                int idHD;
+                bool banMoiMo = false;
+                if (dtHD.Rows.Count == 0)
+                {
+                    ketnoi.ThucThiLenh(
+                        "INSERT INTO HoaDon (Checkin, IDb, TenNV, TrangThai, TongTien) VALUES (GETDATE(), @IDb, @TenNV, N'Chưa thanh toán', 0)",
+                        new[] { new SqlParameter("@IDb", idbdc), new SqlParameter("@TenNV", TenNhanVien) });
+
+                    ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Có người' WHERE ID = @ID", new[] { new SqlParameter("@ID", idbdc) });
+                    idHD = Convert.ToInt32(ketnoi.LayGiaTriDon("SELECT MAX(ID) FROM HoaDon"));
+                    banMoiMo = true;
+                }
+                else
+                {
+                    idHD = Convert.ToInt32(dtHD.Rows[0]["ID"]);
+                }
+
+                DataTable dtMon = ketnoi.LayDuLieu(
+                    "SELECT IDhd FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
+                    new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon) });
+
+                if (dtMon.Rows.Count > 0)
+                {
+                    ketnoi.ThucThiLenh(
+                        "UPDATE CTHD SET SoLuong = SoLuong + 1 WHERE IDhd = @IDhd AND IDm = @IDm",
+                        new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon) });
+                }
+                else
+                {
+                    ketnoi.ThucThiLenh(
+                        "INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, 1, @DonGia)",
+                        new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon), new SqlParameter("@DonGia", donGia) });
+                }
+
+                ketnoi.ThucThiLenh(
+                    "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
+                    new[] { new SqlParameter("@IDhd", idHD) });
+
+                HienThiHoaDon(idbdc);
+                if (banMoiMo) LoadDanhSachBan();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi gọi món: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void HienThiHoaDon(int idBan)
@@ -251,8 +424,7 @@ namespace Coffee_Shop_Management
                 JOIN Menu m ON ct.IDm = m.ID
                 WHERE hd.IDb = @IDb AND hd.TrangThai = N'Chưa thanh toán'";
 
-            SqlParameter[] p = { new SqlParameter("@IDb", idBan) };
-            DataTable dt = ketnoi.LayDuLieu(query, p);
+            DataTable dt = ketnoi.LayDuLieu(query, new[] { new SqlParameter("@IDb", idBan) });
 
             int index = 0;
             foreach (DataRow row in dt.Rows)
@@ -267,194 +439,10 @@ namespace Coffee_Shop_Management
 
                 if (index % 2 == 1) item.BackColor = CoffeeTheme.CreamBg;
                 index++;
-
                 lsvhd.Items.Add(item);
             }
 
-            tt.Text = tongTien.ToString("N0") + " VNĐ";
-        }
-
-        private void LoadDanhMucMon()
-        {
-            DataTable dt = ketnoi.LayDuLieu("SELECT * FROM DanhMucMon");
-            dm.DisplayMember = "TenDanhMuc";
-            dm.ValueMember = "ID";
-            dm.DataSource = dt;
-        }
-
-        private void dm_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (dm.SelectedValue == null) return;
-            if (int.TryParse(dm.SelectedValue.ToString(), out int idDanhMuc))
-            {
-                SqlParameter[] p = { new SqlParameter("@IDdmm", idDanhMuc) };
-                DataTable dt = ketnoi.LayDuLieu("SELECT * FROM Menu WHERE IDdmm = @IDdmm", p);
-
-                tm.DisplayMember = "Tenmon";
-                tm.ValueMember = "ID";
-                tm.DataSource = dt;
-            }
-        }
-
-        private void btm_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (idbdc == -1)
-                {
-                    MessageBox.Show("Vui lòng chọn bàn trước khi thêm món!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                if (tm.SelectedValue == null)
-                {
-                    MessageBox.Show("Chưa có món ăn nào được chọn trong danh mục này!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                int idMon = Convert.ToInt32(tm.SelectedValue);
-                int soLuong = (int)sl.Value;
-
-                object giaObj = ketnoi.LayGiaTriDon("SELECT DonGia FROM Menu WHERE ID = @ID", new[] { new SqlParameter("@ID", idMon) });
-                decimal donGia = Convert.ToDecimal(giaObj);
-
-                DataTable dtHD = ketnoi.LayDuLieu(
-                    "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
-                    new[] { new SqlParameter("@IDb", idbdc) });
-
-                int idHD;
-                if (dtHD.Rows.Count == 0)
-                {
-                    ketnoi.ThucThiLenh(
-                        "INSERT INTO HoaDon (Checkin, IDb, TenNV, TrangThai, TongTien) VALUES (GETDATE(), @IDb, @TenNV, N'Chưa thanh toán', 0)",
-                        new[] {
-                            new SqlParameter("@IDb", idbdc),
-                            new SqlParameter("@TenNV", TenNhanVien)
-                        });
-
-                    ketnoi.ThucThiLenh(
-                        "UPDATE Ban SET TrangThai = N'Có người' WHERE ID = @ID",
-                        new[] { new SqlParameter("@ID", idbdc) });
-
-                    idHD = Convert.ToInt32(ketnoi.LayGiaTriDon("SELECT MAX(ID) FROM HoaDon"));
-                }
-                else
-                {
-                    idHD = Convert.ToInt32(dtHD.Rows[0]["ID"]);
-                }
-
-                DataTable dtMon = ketnoi.LayDuLieu(
-                    "SELECT * FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
-                    new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon) });
-
-                if (dtMon.Rows.Count > 0)
-                {
-                    ketnoi.ThucThiLenh(
-                        "UPDATE CTHD SET SoLuong = SoLuong + @SL WHERE IDhd = @IDhd AND IDm = @IDm",
-                        new[] {
-                            new SqlParameter("@SL", soLuong),
-                            new SqlParameter("@IDhd", idHD),
-                            new SqlParameter("@IDm", idMon)
-                        });
-                }
-                else
-                {
-                    ketnoi.ThucThiLenh(
-                        "INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, @SL, @DonGia)",
-                        new[] {
-                            new SqlParameter("@IDhd", idHD),
-                            new SqlParameter("@IDm", idMon),
-                            new SqlParameter("@SL", soLuong),
-                            new SqlParameter("@DonGia", donGia)
-                        });
-                }
-
-                ketnoi.ThucThiLenh(
-                    "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
-                    new[] { new SqlParameter("@IDhd", idHD) });
-
-                HienThiHoaDon(idbdc);
-                LoadDanhSachBan();
-                sl.Value = 1;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi thêm món: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void bs_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (idbdc == -1 || lsvhd.SelectedItems.Count == 0)
-                {
-                    MessageBox.Show("Vui lòng chọn một món trong bảng Chi tiết hóa đơn để sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                if (tm.SelectedValue == null) return;
-
-                string tenMonCu = lsvhd.SelectedItems[0].SubItems[0].Text;
-                int idMonMoi = Convert.ToInt32(tm.SelectedValue);
-                int soLuongMoi = (int)sl.Value;
-
-                DataTable dtHD = ketnoi.LayDuLieu(
-                    "SELECT ID FROM HoaDon WHERE IDb = @IDb AND TrangThai = N'Chưa thanh toán'",
-                    new[] { new SqlParameter("@IDb", idbdc) });
-
-                if (dtHD.Rows.Count == 0) return;
-                int idHD = Convert.ToInt32(dtHD.Rows[0]["ID"]);
-
-                int idMonCu = Convert.ToInt32(ketnoi.LayGiaTriDon(
-                    "SELECT ID FROM Menu WHERE Tenmon = @Ten",
-                    new[] { new SqlParameter("@Ten", tenMonCu) }));
-
-                if (idMonCu == idMonMoi)
-                {
-                    ketnoi.ThucThiLenh(
-                        "UPDATE CTHD SET SoLuong = @SL WHERE IDhd = @IDhd AND IDm = @IDm",
-                        new[] {
-                            new SqlParameter("@SL", soLuongMoi),
-                            new SqlParameter("@IDhd", idHD),
-                            new SqlParameter("@IDm", idMonCu)
-                        });
-                }
-                else
-                {
-                    decimal donGiaMoi = Convert.ToDecimal(ketnoi.LayGiaTriDon(
-                        "SELECT DonGia FROM Menu WHERE ID = @ID",
-                        new[] { new SqlParameter("@ID", idMonMoi) }));
-
-                    ketnoi.ThucThiLenh("DELETE FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
-                        new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMonCu) });
-
-                    DataTable dtTonTai = ketnoi.LayDuLieu("SELECT * FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
-                        new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMonMoi) });
-
-                    if (dtTonTai.Rows.Count > 0)
-                    {
-                        ketnoi.ThucThiLenh("UPDATE CTHD SET SoLuong = SoLuong + @SL WHERE IDhd = @IDhd AND IDm = @IDm",
-                            new[] { new SqlParameter("@SL", soLuongMoi), new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMonMoi) });
-                    }
-                    else
-                    {
-                        ketnoi.ThucThiLenh("INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, @SL, @DonGia)",
-                            new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMonMoi), new SqlParameter("@SL", soLuongMoi), new SqlParameter("@DonGia", donGiaMoi) });
-                    }
-                }
-
-                ketnoi.ThucThiLenh(
-                    "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
-                    new[] { new SqlParameter("@IDhd", idHD) });
-
-                HienThiHoaDon(idbdc);
-                sl.Value = 1;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khi sửa món: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            txtTongTienPOS.Text = tongTien.ToString("N0") + " VNĐ";
         }
 
         private void CapNhatSoLuongNhanh(int ThayDoi)
@@ -463,7 +451,7 @@ namespace Coffee_Shop_Management
             {
                 if (idbdc == -1 || lsvhd.SelectedItems.Count == 0)
                 {
-                    MessageBox.Show("Vui lòng click chọn một món trong hóa đơn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vui lòng chạm chọn một món trong bảng Chi tiết hóa đơn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -491,22 +479,148 @@ namespace Coffee_Shop_Management
 
                     ketnoi.ThucThiLenh(
                         "UPDATE CTHD SET SoLuong = SoLuong + @ThayDoi WHERE IDhd = @IDhd AND IDm = @IDm",
-                        new[] {
-                            new SqlParameter("@ThayDoi", ThayDoi),
-                            new SqlParameter("@IDhd", idHD),
-                            new SqlParameter("@IDm", idMon)
-                        });
+                        new[] { new SqlParameter("@ThayDoi", ThayDoi), new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon) });
 
                     ketnoi.ThucThiLenh(
                         "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
                         new[] { new SqlParameter("@IDhd", idHD) });
 
                     HienThiHoaDon(idbdc);
+
+                    foreach (ListViewItem item in lsvhd.Items)
+                    {
+                        if (item.Text == tenMon) { item.Selected = true; break; }
+                    }
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Lỗi cập nhật số lượng: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void MoHopThoaiSuaSoLuong()
+        {
+            try
+            {
+                if (idbdc == -1 || lsvhd.SelectedItems.Count == 0)
+                {
+                    MessageBox.Show("Vui lòng chạm chọn một món trong bảng Chi tiết hóa đơn để sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                string tenMon = lsvhd.SelectedItems[0].SubItems[0].Text;
+                int soLuongCu = int.Parse(lsvhd.SelectedItems[0].SubItems[1].Text);
+                int soLuongMoi = soLuongCu;
+
+                using (Form dlg = new Form())
+                {
+                    dlg.Text = "Sửa số lượng món";
+                    dlg.Size = new Size(340, 410);
+                    dlg.StartPosition = FormStartPosition.CenterParent;
+                    dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    dlg.MaximizeBox = false;
+                    dlg.MinimizeBox = false;
+                    dlg.BackColor = CoffeeTheme.CreamBg;
+
+                    Label lblTen = new Label
+                    {
+                        Dock = DockStyle.Top,
+                        Height = 46,
+                        Text = tenMon,
+                        Font = new Font("Segoe UI", 11.5F, FontStyle.Bold),
+                        ForeColor = Color.White,
+                        BackColor = CoffeeTheme.EspressoDark,
+                        TextAlign = ContentAlignment.MiddleCenter
+                    };
+
+                    Label lblSoLuong = new Label
+                    {
+                        Location = new Point(20, 58),
+                        Size = new Size(284, 52),
+                        Text = soLuongMoi.ToString(),
+                        Font = new Font("Segoe UI", 20F, FontStyle.Bold),
+                        ForeColor = CoffeeTheme.PrimaryBlue,
+                        BackColor = Color.White,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        TextAlign = ContentAlignment.MiddleCenter
+                    };
+
+                    TableLayoutPanel tblPad = new TableLayoutPanel
+                    {
+                        Location = new Point(20, 120),
+                        Size = new Size(284, 180),
+                        ColumnCount = 3,
+                        RowCount = 4
+                    };
+                    for (int c = 0; c < 3; c++) tblPad.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+                    for (int r = 0; r < 4; r++) tblPad.RowStyles.Add(new RowStyle(SizeType.Percent, 25F));
+
+                    string[] nut = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "Xóa", "0", "Lùi" };
+                    for (int i = 0; i < nut.Length; i++)
+                    {
+                        string k = nut[i];
+                        bool laChucNang = (k == "Xóa" || k == "Lùi");
+                        RoundedButton b = new RoundedButton
+                        {
+                            Dock = DockStyle.Fill,
+                            Text = k,
+                            Margin = new Padding(3),
+                            BorderRadius = 10,
+                            BackColor = laChucNang ? Color.FromArgb(239, 235, 233) : Color.White,
+                            ForeColor = laChucNang ? CoffeeTheme.DangerRed : CoffeeTheme.EspressoDark,
+                            BorderSize = 1,
+                            BorderColor = Color.FromArgb(200, 195, 190),
+                            Font = new Font("Segoe UI", 11F, FontStyle.Bold)
+                        };
+
+                        b.Click += (s, e) =>
+                        {
+                            string cur = soLuongMoi.ToString();
+                            if (k == "Xóa") soLuongMoi = 0;
+                            else if (k == "Lùi") soLuongMoi = cur.Length > 1 ? int.Parse(cur.Substring(0, cur.Length - 1)) : 0;
+                            else
+                            {
+                                string next = (cur == "0" ? "" : cur) + k;
+                                if (next.Length <= 3 && int.TryParse(next, out int val)) soLuongMoi = val;
+                            }
+                            lblSoLuong.Text = soLuongMoi.ToString();
+                        };
+                        tblPad.Controls.Add(b, i % 3, i / 3);
+                    }
+
+                    RoundedButton btnLuu = new RoundedButton
+                    {
+                        Text = "CẬP NHẬT SỐ LƯỢNG",
+                        Location = new Point(20, 310),
+                        Size = new Size(284, 48),
+                        BorderRadius = 12,
+                        BackColor = CoffeeTheme.SuccessGreen,
+                        ForeColor = Color.White,
+                        Font = new Font("Segoe UI", 10.5F, FontStyle.Bold)
+                    };
+
+                    btnLuu.Click += (s, e) =>
+                    {
+                        if (soLuongMoi <= 0)
+                        {
+                            dlg.Close();
+                            XoaMonDangChon();
+                            return;
+                        }
+
+                        int chenhLech = soLuongMoi - soLuongCu;
+                        dlg.Close();
+                        if (chenhLech != 0) CapNhatSoLuongNhanh(chenhLech);
+                    };
+
+                    dlg.Controls.AddRange(new Control[] { lblTen, lblSoLuong, tblPad, btnLuu });
+                    dlg.ShowDialog(this);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi sửa số lượng: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -516,13 +630,13 @@ namespace Coffee_Shop_Management
             {
                 if (idbdc == -1 || lsvhd.SelectedItems.Count == 0)
                 {
-                    MessageBox.Show("Vui lòng click chọn một món trong bảng Chi tiết hóa đơn cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vui lòng chạm chọn món cần xóa trong hóa đơn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 string tenMon = lsvhd.SelectedItems[0].SubItems[0].Text;
 
-                if (MessageBox.Show($"Bạn có chắc muốn xóa món '{tenMon}' khỏi hóa đơn?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+                if (MessageBox.Show($"Xóa món '{tenMon}' khỏi hóa đơn?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                     return;
 
                 DataTable dt = ketnoi.LayDuLieu(@"
@@ -538,8 +652,7 @@ namespace Coffee_Shop_Management
                     int idHD = Convert.ToInt32(dt.Rows[0]["IDhd"]);
                     int idMon = Convert.ToInt32(dt.Rows[0]["IDm"]);
 
-                    ketnoi.ThucThiLenh(
-                        "DELETE FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
+                    ketnoi.ThucThiLenh("DELETE FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
                         new[] { new SqlParameter("@IDhd", idHD), new SqlParameter("@IDm", idMon) });
 
                     int soMonConLai = Convert.ToInt32(ketnoi.LayGiaTriDon(
@@ -550,6 +663,7 @@ namespace Coffee_Shop_Management
                     {
                         ketnoi.ThucThiLenh("DELETE FROM HoaDon WHERE ID = @IDhd", new[] { new SqlParameter("@IDhd", idHD) });
                         ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @IDb", new[] { new SqlParameter("@IDb", idbdc) });
+                        LoadDanhSachBan();
                     }
                     else
                     {
@@ -559,8 +673,6 @@ namespace Coffee_Shop_Management
                     }
 
                     HienThiHoaDon(idbdc);
-                    LoadDanhSachBan();
-                    sl.Value = 1;
                 }
             }
             catch (Exception ex)
@@ -575,7 +687,7 @@ namespace Coffee_Shop_Management
             {
                 if (idbdc == -1)
                 {
-                    MessageBox.Show("Vui lòng chọn bàn cần thanh toán!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Vui lòng chạm chọn bàn cần thanh toán!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -587,19 +699,31 @@ namespace Coffee_Shop_Management
                 {
                     int idHD = Convert.ToInt32(dtHD.Rows[0]["ID"]);
                     decimal tongTien = Convert.ToDecimal(dtHD.Rows[0]["TongTien"]);
+                    string tenBanHienTai = lblTieuDeBanPOS.Text.Replace("ĐANG PHỤC VỤ: ", "");
 
-                    if (MessageBox.Show($"Xác nhận thanh toán hóa đơn?\nTổng tiền: {tongTien:N0} VNĐ", "Thanh toán", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    var ketQuaThanhToan = MoHopThoaiThanhToanCamUng(tenBanHienTai, tongTien);
+                    if (ketQuaThanhToan.DaXacNhan)
                     {
-                        ketnoi.ThucThiLenh(
-                            "UPDATE HoaDon SET Checkout = GETDATE(), TrangThai = N'Đã thanh toán' WHERE ID = @ID",
+                        DataTable dtChiTietIn = ketnoi.LayDuLieu(@"
+                            SELECT m.Tenmon, ct.SoLuong, ct.DonGia, ct.ThanhTien
+                            FROM CTHD ct
+                            JOIN Menu m ON ct.IDm = m.ID
+                            WHERE ct.IDhd = @IDhd",
+                            new[] { new SqlParameter("@IDhd", idHD) });
+
+                        ketnoi.ThucThiLenh("UPDATE HoaDon SET Checkout = GETDATE(), TrangThai = N'Đã thanh toán' WHERE ID = @ID",
                             new[] { new SqlParameter("@ID", idHD) });
 
-                        ketnoi.ThucThiLenh(
-                            "UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID",
+                        ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID",
                             new[] { new SqlParameter("@ID", idbdc) });
 
                         HienThiHoaDon(idbdc);
                         LoadDanhSachBan();
+
+                        if (ketQuaThanhToan.InHoaDon)
+                        {
+                            InHoaDon(idHD, tenBanHienTai, dtChiTietIn, tongTien, ketQuaThanhToan.TienKhachDua, ketQuaThanhToan.TienThoi);
+                        }
                     }
                 }
                 else
@@ -613,12 +737,229 @@ namespace Coffee_Shop_Management
             }
         }
 
-        // ==================== CHỨC NĂNG CHUYỂN / GỘP BÀN ====================
+        private (bool DaXacNhan, bool InHoaDon, decimal TienKhachDua, decimal TienThoi) MoHopThoaiThanhToanCamUng(string tenBan, decimal tongTien)
+        {
+            decimal tienKhachDua = tongTien;
+            bool xacNhan = false;
+            bool muonIn = true;
+
+            using (Form dlg = new Form())
+            {
+                dlg.Text = $"Thanh toán cảm ứng - {tenBan}";
+                dlg.Size = new Size(560, 560);
+                dlg.StartPosition = FormStartPosition.CenterParent;
+                dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
+                dlg.MaximizeBox = false;
+                dlg.MinimizeBox = false;
+                dlg.BackColor = CoffeeTheme.CreamBg;
+
+                Panel pnlTop = new Panel { Dock = DockStyle.Top, Height = 56, BackColor = CoffeeTheme.EspressoDark };
+                Label lblHeader = new Label
+                {
+                    Dock = DockStyle.Fill,
+                    Text = $"  THANH TOÁN: {tenBan}",
+                    Font = new Font("Segoe UI", 13F, FontStyle.Bold),
+                    ForeColor = Color.White,
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+                pnlTop.Controls.Add(lblHeader);
+
+                TableLayoutPanel tblSummary = new TableLayoutPanel
+                {
+                    Location = new Point(20, 70),
+                    Size = new Size(504, 126),
+                    ColumnCount = 2,
+                    RowCount = 3,
+                    BackColor = Color.White,
+                    CellBorderStyle = TableLayoutPanelCellBorderStyle.Single
+                };
+                tblSummary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 48F));
+                tblSummary.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 52F));
+                for (int i = 0; i < 3; i++) tblSummary.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+
+                Label TaoLblTrai(string txt) => new Label
+                {
+                    Dock = DockStyle.Fill,
+                    Text = "  " + txt,
+                    Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                    ForeColor = CoffeeTheme.EspressoDark,
+                    TextAlign = ContentAlignment.MiddleLeft
+                };
+
+                Label TaoLblPhai(string txt, Color mau) => new Label
+                {
+                    Dock = DockStyle.Fill,
+                    Text = txt + "  ",
+                    Font = new Font("Segoe UI", 13.5F, FontStyle.Bold),
+                    ForeColor = mau,
+                    TextAlign = ContentAlignment.MiddleRight
+                };
+
+                Label lblValTong = TaoLblPhai($"{tongTien:N0} đ", CoffeeTheme.EspressoDark);
+                Label lblValKhachDua = TaoLblPhai($"{tienKhachDua:N0} đ", CoffeeTheme.PrimaryBlue);
+                Label lblValTienThoi = TaoLblPhai("0 đ", CoffeeTheme.SuccessGreen);
+
+                tblSummary.Controls.Add(TaoLblTrai("Tổng thanh toán:"), 0, 0);
+                tblSummary.Controls.Add(lblValTong, 1, 0);
+                tblSummary.Controls.Add(TaoLblTrai("Tiền khách đưa:"), 0, 1);
+                tblSummary.Controls.Add(lblValKhachDua, 1, 1);
+                tblSummary.Controls.Add(TaoLblTrai("Tiền thừa trả khách:"), 0, 2);
+                tblSummary.Controls.Add(lblValTienThoi, 1, 2);
+
+                void CapNhatHienThiTien()
+                {
+                    lblValKhachDua.Text = $"{tienKhachDua:N0} đ  ";
+                    decimal thoi = tienKhachDua - tongTien;
+                    if (thoi >= 0)
+                    {
+                        lblValTienThoi.Text = $"{thoi:N0} đ  ";
+                        lblValTienThoi.ForeColor = CoffeeTheme.SuccessGreen;
+                    }
+                    else
+                    {
+                        lblValTienThoi.Text = $"Thiếu {Math.Abs(thoi):N0} đ  ";
+                        lblValTienThoi.ForeColor = CoffeeTheme.DangerRed;
+                    }
+                }
+
+                TableLayoutPanel tblMenhGia = new TableLayoutPanel
+                {
+                    Location = new Point(20, 208),
+                    Size = new Size(504, 54),
+                    ColumnCount = 5,
+                    RowCount = 1
+                };
+                for (int i = 0; i < 5; i++) tblMenhGia.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 20F));
+
+                var menhGias = new (string Nhan, decimal GiaTri)[]
+                {
+                    ("Đủ tiền", tongTien),
+                    ("50.000", 50000),
+                    ("100.000", 100000),
+                    ("200.000", 200000),
+                    ("500.000", 500000)
+                };
+
+                for (int i = 0; i < menhGias.Length; i++)
+                {
+                    var item = menhGias[i];
+                    RoundedButton btnMG = new RoundedButton
+                    {
+                        Dock = DockStyle.Fill,
+                        Text = item.Nhan,
+                        Margin = new Padding(3),
+                        BorderRadius = 10,
+                        BackColor = (i == 0) ? CoffeeTheme.EspressoDark : Color.White,
+                        ForeColor = (i == 0) ? Color.White : CoffeeTheme.EspressoDark,
+                        BorderSize = 1,
+                        BorderColor = CoffeeTheme.EspressoDark,
+                        Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
+                    };
+                    btnMG.Click += (s, e) =>
+                    {
+                        tienKhachDua = item.GiaTri;
+                        CapNhatHienThiTien();
+                    };
+                    tblMenhGia.Controls.Add(btnMG, i, 0);
+                }
+
+                TableLayoutPanel tblNumpad = new TableLayoutPanel
+                {
+                    Location = new Point(20, 270),
+                    Size = new Size(504, 165),
+                    ColumnCount = 4,
+                    RowCount = 3
+                };
+                for (int c = 0; c < 4; c++) tblNumpad.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+                for (int r = 0; r < 3; r++) tblNumpad.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+
+                string[] phimSo = { "1", "2", "3", "Xóa hết", "4", "5", "6", "Lùi 1 số", "7", "8", "9", "000" };
+                for (int idx = 0; idx < phimSo.Length; idx++)
+                {
+                    string kyTu = phimSo[idx];
+                    bool laNutChucNang = kyTu.Contains("Xóa") || kyTu.Contains("Lùi");
+                    RoundedButton btnSo = new RoundedButton
+                    {
+                        Dock = DockStyle.Fill,
+                        Text = kyTu,
+                        Margin = new Padding(3),
+                        BorderRadius = 10,
+                        BackColor = laNutChucNang ? Color.FromArgb(239, 235, 233) : Color.White,
+                        ForeColor = laNutChucNang ? CoffeeTheme.DangerRed : CoffeeTheme.EspressoDark,
+                        BorderSize = 1,
+                        BorderColor = Color.FromArgb(200, 195, 190),
+                        Font = new Font("Segoe UI", 11F, FontStyle.Bold)
+                    };
+
+                    btnSo.Click += (s, e) =>
+                    {
+                        string chuoiHienTai = ((long)tienKhachDua).ToString();
+                        if (kyTu == "Xóa hết") tienKhachDua = 0;
+                        else if (kyTu == "Lùi 1 số")
+                            tienKhachDua = chuoiHienTai.Length > 1 ? decimal.Parse(chuoiHienTai.Substring(0, chuoiHienTai.Length - 1)) : 0;
+                        else
+                        {
+                            string chuoiMoi = (chuoiHienTai == "0" ? "" : chuoiHienTai) + kyTu;
+                            if (chuoiMoi.Length <= 10 && decimal.TryParse(chuoiMoi, out decimal valMoi))
+                                tienKhachDua = valMoi;
+                        }
+                        CapNhatHienThiTien();
+                    };
+                    tblNumpad.Controls.Add(btnSo, idx % 4, idx / 4);
+                }
+
+                RoundedButton btnChotKhongIn = new RoundedButton
+                {
+                    Text = "CHỐT ĐƠN (KHÔNG IN)",
+                    Location = new Point(20, 448),
+                    Size = new Size(215, 56),
+                    BorderRadius = 12,
+                    BackColor = CoffeeTheme.PrimaryBlue,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold)
+                };
+
+                RoundedButton btnChotVaIn = new RoundedButton
+                {
+                    Text = "  THANH TOÁN & IN PHIẾU",
+                    Location = new Point(245, 448),
+                    Size = new Size(279, 56),
+                    BorderRadius = 12,
+                    BackColor = CoffeeTheme.SuccessGreen,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
+                    Image = CoffeeIcons.Check(Color.White, 22),
+                    TextImageRelation = TextImageRelation.ImageBeforeText
+                };
+
+                void XuLyChot(bool inPhieu)
+                {
+                    if (tienKhachDua < tongTien)
+                    {
+                        MessageBox.Show($"Tiền khách đưa còn thiếu {(tongTien - tienKhachDua):N0} VNĐ!", "Chưa đủ tiền", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    xacNhan = true;
+                    muonIn = inPhieu;
+                    dlg.DialogResult = DialogResult.OK;
+                    dlg.Close();
+                }
+
+                btnChotKhongIn.Click += (s, e) => XuLyChot(false);
+                btnChotVaIn.Click += (s, e) => XuLyChot(true);
+
+                dlg.Controls.AddRange(new Control[] { pnlTop, tblSummary, tblMenhGia, tblNumpad, btnChotKhongIn, btnChotVaIn });
+                dlg.ShowDialog(this);
+            }
+
+            return (xacNhan, muonIn, tienKhachDua, Math.Max(0, tienKhachDua - tongTien));
+        }
+
         private void MoHopThoaiChuyenGopBan()
         {
             if (idbdc == -1)
             {
-                MessageBox.Show("Vui lòng chọn bàn nguồn cần chuyển/gộp trước!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chạm chọn bàn nguồn cần chuyển/gộp trước!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -641,7 +982,7 @@ namespace Coffee_Shop_Management
             using (Form dlg = new Form())
             {
                 dlg.Text = "Chuyển bàn / Gộp bàn";
-                dlg.Size = new Size(360, 195);
+                dlg.Size = new Size(400, 225);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.MaximizeBox = false;
@@ -650,36 +991,37 @@ namespace Coffee_Shop_Management
 
                 Label lbl = new Label
                 {
-                    Text = $"Từ {lbdc.Text.Replace("Đang chọn: ", "")} chuyển / gộp sang:",
-                    Location = new Point(22, 20),
+                    Text = $"Từ {lblTieuDeBanPOS.Text.Replace("ĐANG PHỤC VỤ: ", "")} chuyển / gộp sang:",
+                    Location = new Point(22, 22),
                     AutoSize = true,
-                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                     ForeColor = CoffeeTheme.EspressoDark
                 };
 
                 ComboBox cbBanDich = new ComboBox
                 {
-                    Location = new Point(22, 52),
-                    Width = 300,
+                    Location = new Point(22, 58),
+                    Width = 340,
                     DropDownStyle = ComboBoxStyle.DropDownList,
-                    Font = new Font("Segoe UI", 10.5F),
+                    Font = new Font("Segoe UI", 12F),
                     DisplayMember = "HienThi",
                     ValueMember = "ID",
                     DataSource = dtBanDich
                 };
 
-                Button btnXacNhan = new Button
+                RoundedButton btnXacNhan = new RoundedButton
                 {
                     Text = "XÁC NHẬN",
-                    Location = new Point(112, 102),
-                    Size = new Size(120, 38),
+                    Location = new Point(115, 114),
+                    Size = new Size(150, 48),
+                    BorderRadius = 12,
+                    BackColor = CoffeeTheme.PrimaryBlue,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                     DialogResult = DialogResult.OK
                 };
-                UIHelper.StyleFlatRoundedButton(btnXacNhan, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229), Color.White);
 
                 dlg.Controls.AddRange(new Control[] { lbl, cbBanDich, btnXacNhan });
-                dlg.AcceptButton = btnXacNhan;
-
                 if (dlg.ShowDialog(this) == DialogResult.OK && cbBanDich.SelectedValue != null)
                 {
                     int idBanDich = Convert.ToInt32(cbBanDich.SelectedValue);
@@ -703,10 +1045,8 @@ namespace Coffee_Shop_Management
 
                 if (dtHDDich.Rows.Count == 0)
                 {
-                    ketnoi.ThucThiLenh(
-                        "UPDATE HoaDon SET IDb = @IDDich WHERE ID = @IDhd",
+                    ketnoi.ThucThiLenh("UPDATE HoaDon SET IDb = @IDDich WHERE ID = @IDhd",
                         new[] { new SqlParameter("@IDDich", idBanDich), new SqlParameter("@IDhd", idHDNguon) });
-
                     ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanNguon) });
                     ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Có người' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanDich) });
 
@@ -715,8 +1055,7 @@ namespace Coffee_Shop_Management
                 else
                 {
                     int idHDDich = Convert.ToInt32(dtHDDich.Rows[0]["ID"]);
-                    DataTable dtMonNguon = ketnoi.LayDuLieu(
-                        "SELECT IDm, SoLuong, DonGia FROM CTHD WHERE IDhd = @IDhd",
+                    DataTable dtMonNguon = ketnoi.LayDuLieu("SELECT IDm, SoLuong, DonGia FROM CTHD WHERE IDhd = @IDhd",
                         new[] { new SqlParameter("@IDhd", idHDNguon) });
 
                     foreach (DataRow row in dtMonNguon.Rows)
@@ -725,20 +1064,17 @@ namespace Coffee_Shop_Management
                         int soLuong = Convert.ToInt32(row["SoLuong"]);
                         decimal donGia = Convert.ToDecimal(row["DonGia"]);
 
-                        DataTable dtTrung = ketnoi.LayDuLieu(
-                            "SELECT ID FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
+                        DataTable dtTrung = ketnoi.LayDuLieu("SELECT IDhd FROM CTHD WHERE IDhd = @IDhd AND IDm = @IDm",
                             new[] { new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon) });
 
                         if (dtTrung.Rows.Count > 0)
                         {
-                            ketnoi.ThucThiLenh(
-                                "UPDATE CTHD SET SoLuong = SoLuong + @SL WHERE IDhd = @IDhd AND IDm = @IDm",
+                            ketnoi.ThucThiLenh("UPDATE CTHD SET SoLuong = SoLuong + @SL WHERE IDhd = @IDhd AND IDm = @IDm",
                                 new[] { new SqlParameter("@SL", soLuong), new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon) });
                         }
                         else
                         {
-                            ketnoi.ThucThiLenh(
-                                "INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, @SL, @DonGia)",
+                            ketnoi.ThucThiLenh("INSERT INTO CTHD (IDhd, IDm, SoLuong, DonGia) VALUES (@IDhd, @IDm, @SL, @DonGia)",
                                 new[] { new SqlParameter("@IDhd", idHDDich), new SqlParameter("@IDm", idMon), new SqlParameter("@SL", soLuong), new SqlParameter("@DonGia", donGia) });
                         }
                     }
@@ -746,22 +1082,103 @@ namespace Coffee_Shop_Management
                     ketnoi.ThucThiLenh("DELETE FROM CTHD WHERE IDhd = @IDhd", new[] { new SqlParameter("@IDhd", idHDNguon) });
                     ketnoi.ThucThiLenh("DELETE FROM HoaDon WHERE ID = @IDhd", new[] { new SqlParameter("@IDhd", idHDNguon) });
                     ketnoi.ThucThiLenh("UPDATE Ban SET TrangThai = N'Trống' WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanNguon) });
-
-                    ketnoi.ThucThiLenh(
-                        "UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
+                    ketnoi.ThucThiLenh("UPDATE HoaDon SET TongTien = (SELECT ISNULL(SUM(ThanhTien), 0) FROM CTHD WHERE IDhd = @IDhd) WHERE ID = @IDhd",
                         new[] { new SqlParameter("@IDhd", idHDDich) });
 
                     MessageBox.Show($"Đã gộp hóa đơn vào {tenBanDich} thành công!", "Gộp bàn", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
 
                 idbdc = idBanDich;
-                lbdc.Text = $"Đang chọn: {tenBanDich}";
+                lblTieuDeBanPOS.Text = $"ĐANG PHỤC VỤ: {tenBanDich.ToUpper()}";
                 LoadDanhSachBan();
                 HienThiHoaDon(idbdc);
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Lỗi khi chuyển/gộp bàn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void InHoaDon(int idHD, string tenBan, DataTable dtChiTiet, decimal tongTien, decimal tienKhachDua, decimal tienThoi)
+        {
+            PrintDocument printDoc = new PrintDocument();
+            int chieuCaoGiay = 390 + (dtChiTiet.Rows.Count * 28);
+            printDoc.DefaultPageSettings.PaperSize = new PaperSize("BillK80", 320, chieuCaoGiay);
+
+            printDoc.PrintPage += (s, ev) =>
+            {
+                Graphics g = ev.Graphics;
+                Font fTieuDe = new Font("Segoe UI", 13, FontStyle.Bold);
+                Font fSub = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+                Font fHoaDon = new Font("Segoe UI", 11, FontStyle.Bold);
+                Font fThuong = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+                Font fDam = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+                Font fTong = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+
+                Brush brushNau = new SolidBrush(Color.FromArgb(62, 39, 35));
+                Pen penNetDut = new Pen(Color.Gray, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
+                StringFormat canGiua = new StringFormat { Alignment = StringAlignment.Center };
+                StringFormat canPhai = new StringFormat { Alignment = StringAlignment.Far };
+
+                int y = 15, width = 320;
+                g.DrawString("GÁC XÉP THÁNG TƯ", fTieuDe, brushNau, new RectangleF(0, y, width, 24), canGiua);
+                y += 24;
+                g.DrawString("Coffee & Tea - Ấm áp từng khoảnh khắc", fSub, Brushes.Black, new RectangleF(0, y, width, 18), canGiua);
+                y += 22;
+                g.DrawLine(penNetDut, 12, y, width - 12, y);
+                y += 10;
+
+                g.DrawString("PHIẾU THANH TOÁN", fHoaDon, Brushes.Black, new RectangleF(0, y, width, 22), canGiua);
+                y += 26;
+                g.DrawString($"Số HĐ: #{idHD}", fThuong, Brushes.Black, 14, y);
+                g.DrawString($"Bàn: {tenBan}", fDam, Brushes.Black, width - 14, y, canPhai);
+                y += 18;
+                g.DrawString($"Ngày: {DateTime.Now:dd/MM/yyyy HH:mm}", fThuong, Brushes.Black, 14, y);
+                g.DrawString($"NV: {TenNhanVien}", fThuong, Brushes.Black, width - 14, y, canPhai);
+                y += 22;
+                g.DrawLine(penNetDut, 12, y, width - 12, y);
+                y += 8;
+
+                g.DrawString("Tên món", fDam, Brushes.Black, 14, y);
+                g.DrawString("SL", fDam, Brushes.Black, 185, y, canGiua);
+                g.DrawString("Thành tiền", fDam, Brushes.Black, width - 14, y, canPhai);
+                y += 20;
+                g.DrawLine(penNetDut, 12, y, width - 12, y);
+                y += 8;
+
+                foreach (DataRow row in dtChiTiet.Rows)
+                {
+                    string tenMon = row["Tenmon"].ToString();
+                    if (tenMon.Length > 21) tenMon = tenMon.Substring(0, 20) + "…";
+                    g.DrawString(tenMon, fThuong, Brushes.Black, 14, y);
+                    g.DrawString(row["SoLuong"].ToString(), fThuong, Brushes.Black, 185, y, canGiua);
+                    g.DrawString(Convert.ToDecimal(row["ThanhTien"]).ToString("N0"), fThuong, Brushes.Black, width - 14, y, canPhai);
+                    y += 22;
+                }
+
+                y += 4;
+                g.DrawLine(penNetDut, 12, y, width - 12, y);
+                y += 10;
+                g.DrawString("TỔNG CỘNG:", fTong, brushNau, 14, y);
+                g.DrawString($"{tongTien:N0} VNĐ", fTong, brushNau, width - 14, y, canPhai);
+                y += 24;
+                g.DrawString("Tiền khách đưa:", fThuong, Brushes.Black, 14, y);
+                g.DrawString($"{tienKhachDua:N0} VNĐ", fThuong, Brushes.Black, width - 14, y, canPhai);
+                y += 20;
+                g.DrawString("Tiền thừa trả khách:", fDam, Brushes.Black, 14, y);
+                g.DrawString($"{tienThoi:N0} VNĐ", fDam, Brushes.Black, width - 14, y, canPhai);
+                y += 30;
+                g.DrawString("Cảm ơn quý khách và hẹn gặp lại!", fSub, Brushes.Black, new RectangleF(0, y, width, 20), canGiua);
+            };
+
+            using (PrintPreviewDialog previewDlg = new PrintPreviewDialog())
+            {
+                previewDlg.Document = printDoc;
+                previewDlg.Text = $"Xem trước Phiếu thanh toán #{idHD} - {tenBan}";
+                previewDlg.Width = 520;
+                previewDlg.Height = 680;
+                previewDlg.StartPosition = FormStartPosition.CenterParent;
+                previewDlg.ShowDialog(this);
             }
         }
     }
