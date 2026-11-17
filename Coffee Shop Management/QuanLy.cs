@@ -143,7 +143,7 @@ namespace Coffee_Shop_Management
                 SELECT m.ID, m.Tenmon, dm.TenDanhMuc AS DanhMuc, m.DonGia, m.IDdmm
                 FROM Menu m
                 JOIN DanhMucMon dm ON m.IDdmm = dm.ID
-                ORDER BY m.ID DESC";
+                ORDER BY m.ID ASC";
             dgvMon.DataSource = ketnoi.LayDuLieu(sql);
 
             if (dgvMon.Columns.Contains("IDdmm")) dgvMon.Columns["IDdmm"].Visible = false;
@@ -155,6 +155,7 @@ namespace Coffee_Shop_Management
                 dgvMon.Columns["DonGia"].HeaderText = "Đơn giá";
                 dgvMon.Columns["DonGia"].DefaultCellStyle.Format = "N0";
             }
+            dgvMon.ClearSelection();
         }
 
         private void ResetFormMon()
