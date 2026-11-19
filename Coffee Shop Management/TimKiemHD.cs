@@ -2,159 +2,284 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
 {
     public partial class TimKiemHD : Form
     {
+        private bool locTatCa = false;
+
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, string lParam);
+
+        private const int EM_SETCUEBANNER = 0x1501;
+
         public TimKiemHD()
         {
             InitializeComponent();
-            UIHelper.StyleDataGridView(dgvHoaDon);
-            UIHelper.StyleDataGridView(dgvChiTiet);
-            this.BackColor = CoffeeTheme.CreamBg;
+            this.DoubleBuffered = true;
 
-            cbTrangThai.SelectedIndex = 0;
-
-            // Lọc realtime ngay khi gõ từ khóa, đổi trạng thái hoặc đổi ngày
-            tbtk.TextChanged += (s, e) => TimKiem();
-            cbTrangThai.SelectedIndexChanged += (s, e) => TimKiem();
-            dtpTuNgay.ValueChanged += (s, e) => { if (chkLocNgay.Checked) TimKiem(); };
-            dtpDenNgay.ValueChanged += (s, e) => { if (chkLocNgay.Checked) TimKiem(); };
-
-            chkLocNgay.CheckedChanged += (s, e) =>
-            {
-                dtpTuNgay.Enabled = chkLocNgay.Checked;
-                dtpDenNgay.Enabled = chkLocNgay.Checked;
-                TimKiem();
-            };
-
-            // Lọc nhanh 1 chạm hóa đơn trong ngày hôm nay
-            btnHomNay.Click += (s, e) =>
-            {
-                chkLocNgay.Checked = true;
-                dtpTuNgay.Value = DateTime.Today;
-                dtpDenNgay.Value = DateTime.Today;
-                TimKiem();
-            };
-
-            // Xóa toàn bộ bộ lọc về mặc định
-            btnLamMoi.Click += (s, e) =>
-            {
-                tbtk.Clear();
-                cbTrangThai.SelectedIndex = 0;
-                chkLocNgay.Checked = false;
-                TimKiem();
-                tbtk.Focus();
-            };
-
-            // Tự động hiển thị chi tiết món của dòng đang chọn
-            dgvHoaDon.SelectionChanged += (s, e) =>
-            {
-                if (dgvHoaDon.CurrentRow == null)
-                {
-                    dgvChiTiet.DataSource = null;
-                    return;
-                }
-                if (int.TryParse(dgvHoaDon.CurrentRow.Cells["Mã HĐ"].Value?.ToString(), out int idHD))
-                {
-                    HienThiChiTiet(idHD);
-                }
-            };
+            DinhDangBang(dgvHoaDon);
+            DinhDangBang(dgvChiTiet);
+            GanSuKien();
 
             Load += (s, e) =>
             {
-                TimKiem();
-                tbtk.Focus();
+                SendMessage(txtTuKhoa.Handle, EM_SETCUEBANNER, (IntPtr)1, "Nhập số hóa đơn, bàn");
+                ChonNutLocNhanh(btnHomNay);
+                dtpTuNgay.Value = DateTime.Today;
+                dtpDenNgay.Value = DateTime.Today;
+                locTatCa = false;
+                TaiDanhSachHoaDon();
             };
         }
 
-        private void TimKiem()
+        private void DinhDangBang(DataGridView dgv)
+        {
+            dgv.EnableHeadersVisualStyles = false;
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = CoffeeTheme.EspressoDark;
+            dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+            dgv.DefaultCellStyle.Font = new Font("Segoe UI", 10.5F);
+            dgv.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 224, 178);
+            dgv.DefaultCellStyle.SelectionForeColor = CoffeeTheme.EspressoDark;
+            dgv.AlternatingRowsDefaultCellStyle.BackColor = CoffeeTheme.CreamBg;
+        }
+
+        private void ChonNutLocNhanh(RoundedButton nutDangChon)
+        {
+            RoundedButton[] nhomNut = { btnHomNay, btn7Ngay, btnThangNay, btnTatCa };
+            foreach (RoundedButton b in nhomNut)
+            {
+                bool active = (b == nutDangChon);
+                b.BackColor = active ? CoffeeTheme.EspressoDark : CoffeeTheme.CreamBg;
+                b.ForeColor = active ? Color.White : CoffeeTheme.EspressoDark;
+                b.BorderSize = active ? 0 : 1;
+            }
+
+            bool tatCa = (nutDangChon == btnTatCa);
+            dtpTuNgay.Enabled = !tatCa;
+            dtpDenNgay.Enabled = !tatCa;
+        }
+
+        private void GanSuKien()
+        {
+            btnDong.Cursor = Cursors.Hand;
+            btnDong.Click += (s, e) => this.Close();
+
+            btnTimKiem.Image = CoffeeIcons.Search(Color.White, 18);
+            btnTimKiem.TextImageRelation = TextImageRelation.ImageBeforeText;
+            btnTimKiem.Cursor = Cursors.Hand;
+
+            btnHomNay.Click += (s, e) =>
+            {
+                ChonNutLocNhanh(btnHomNay);
+                dtpTuNgay.Value = DateTime.Today;
+                dtpDenNgay.Value = DateTime.Today;
+                locTatCa = false;
+                TaiDanhSachHoaDon();
+            };
+
+            btn7Ngay.Click += (s, e) =>
+            {
+                ChonNutLocNhanh(btn7Ngay);
+                dtpTuNgay.Value = DateTime.Today.AddDays(-6);
+                dtpDenNgay.Value = DateTime.Today;
+                locTatCa = false;
+                TaiDanhSachHoaDon();
+            };
+
+            btnThangNay.Click += (s, e) =>
+            {
+                ChonNutLocNhanh(btnThangNay);
+                dtpTuNgay.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                dtpDenNgay.Value = DateTime.Today;
+                locTatCa = false;
+                TaiDanhSachHoaDon();
+            };
+
+            btnTatCa.Click += (s, e) =>
+            {
+                ChonNutLocNhanh(btnTatCa);
+                locTatCa = true;
+                TaiDanhSachHoaDon();
+            };
+
+            btnTimKiem.Click += (s, e) =>
+            {
+                TaiDanhSachHoaDon();
+            };
+
+            txtTuKhoa.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    TaiDanhSachHoaDon();
+                }
+            };
+
+            dgvHoaDon.CellClick += (s, e) =>
+            {
+                if (e.RowIndex >= 0 && dgvHoaDon.CurrentRow != null)
+                {
+                    int idHD = Convert.ToInt32(dgvHoaDon.CurrentRow.Cells["ID"].Value);
+                    string tenBan = dgvHoaDon.CurrentRow.Cells["TenBan"].Value?.ToString() ?? "";
+                    TaiChiTietHoaDon(idHD, tenBan);
+                }
+            };
+        }
+
+        private void TaiDanhSachHoaDon()
         {
             try
             {
-                string tukhoa = tbtk.Text.Trim();
-                string trangThai = cbTrangThai.SelectedItem?.ToString() ?? "Tất cả";
+                List<SqlParameter> thamSo = new List<SqlParameter>();
 
-                string query = @"
-                    SELECT hd.ID AS [Mã HĐ],
-                           b.TenBan AS [Tên bàn],
-                           hd.TenNV AS [Nhân viên],
-                           hd.Checkin AS [Giờ vào],
-                           hd.Checkout AS [Giờ ra],
-                           hd.TongTien AS [Tổng tiền],
-                           hd.TrangThai AS [Trạng thái]
+                string sql = @"
+                    SELECT hd.ID, b.TenBan, hd.TenNV, hd.Checkin, hd.Checkout, hd.TongTien, hd.TrangThai
                     FROM HoaDon hd
                     LEFT JOIN Ban b ON hd.IDb = b.ID
-                    WHERE 1 = 1";
+                    WHERE hd.TrangThai = @TT AND hd.TongTien > 0";
+                thamSo.Add(new SqlParameter("@TT", "Đã thanh toán"));
 
-                List<SqlParameter> p = new List<SqlParameter>();
-
-                if (!string.IsNullOrEmpty(tukhoa))
+                if (!locTatCa)
                 {
-                    query += @" AND (CAST(hd.ID AS NVARCHAR) LIKE @TK 
-                                  OR b.TenBan LIKE @TK 
-                                  OR hd.TenNV LIKE @TK)";
-                    p.Add(new SqlParameter("@TK", "%" + tukhoa + "%"));
+                    DateTime tuNgay = dtpTuNgay.Value.Date;
+                    DateTime denNgay = dtpDenNgay.Value.Date.AddDays(1);
+                    sql += " AND hd.Checkin >= @TuNgay AND hd.Checkin < @DenNgay";
+                    thamSo.Add(new SqlParameter("@TuNgay", tuNgay));
+                    thamSo.Add(new SqlParameter("@DenNgay", denNgay));
                 }
 
-                if (trangThai != "Tất cả")
+                string tuKhoa = txtTuKhoa.Text.Trim();
+                if (!string.IsNullOrEmpty(tuKhoa))
                 {
-                    query += " AND hd.TrangThai = @TrangThai";
-                    p.Add(new SqlParameter("@TrangThai", trangThai));
+                    sql += " AND (CAST(hd.ID AS NVARCHAR(20)) LIKE @KW OR b.TenBan LIKE @KW OR hd.TenNV LIKE @KW)";
+                    thamSo.Add(new SqlParameter("@KW", "%" + tuKhoa + "%"));
                 }
 
-                if (chkLocNgay.Checked)
-                {
-                    query += " AND CAST(hd.Checkin AS DATE) BETWEEN @TuNgay AND @DenNgay";
-                    p.Add(new SqlParameter("@TuNgay", dtpTuNgay.Value.Date));
-                    p.Add(new SqlParameter("@DenNgay", dtpDenNgay.Value.Date));
-                }
+                sql += " ORDER BY hd.ID ASC";
 
-                query += " ORDER BY hd.ID DESC";
-
-                DataTable dt = ketnoi.LayDuLieu(query, p.ToArray());
+                DataTable dt = ketnoi.LayDuLieu(sql, thamSo.ToArray());
                 dgvHoaDon.DataSource = dt;
+                dgvHoaDon.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
 
-                if (dgvHoaDon.Columns["Tổng tiền"] != null)
-                    dgvHoaDon.Columns["Tổng tiền"].DefaultCellStyle.Format = "N0";
+                if (dgvHoaDon.Columns.Contains("ID"))
+                {
+                    dgvHoaDon.Columns["ID"].HeaderText = "Số HĐ";
+                    dgvHoaDon.Columns["ID"].FillWeight = 8;
+                }
+                if (dgvHoaDon.Columns.Contains("TenBan"))
+                {
+                    dgvHoaDon.Columns["TenBan"].HeaderText = "Bàn";
+                    dgvHoaDon.Columns["TenBan"].FillWeight = 12;
+                }
+                if (dgvHoaDon.Columns.Contains("TenNV"))
+                {
+                    dgvHoaDon.Columns["TenNV"].HeaderText = "Thu ngân";
+                    dgvHoaDon.Columns["TenNV"].FillWeight = 14;
+                }
+                if (dgvHoaDon.Columns.Contains("Checkin"))
+                {
+                    dgvHoaDon.Columns["Checkin"].HeaderText = "Giờ vào";
+                    dgvHoaDon.Columns["Checkin"].DefaultCellStyle.Format = "dd/MM/yy HH:mm";
+                    dgvHoaDon.Columns["Checkin"].FillWeight = 20;
+                }
+                if (dgvHoaDon.Columns.Contains("Checkout"))
+                {
+                    dgvHoaDon.Columns["Checkout"].HeaderText = "Giờ thanh toán";
+                    dgvHoaDon.Columns["Checkout"].DefaultCellStyle.Format = "dd/MM/yy HH:mm";
+                    dgvHoaDon.Columns["Checkout"].FillWeight = 20;
+                }
+                if (dgvHoaDon.Columns.Contains("TongTien"))
+                {
+                    dgvHoaDon.Columns["TongTien"].HeaderText = "Tổng tiền";
+                    dgvHoaDon.Columns["TongTien"].DefaultCellStyle.Format = "N0";
+                    dgvHoaDon.Columns["TongTien"].FillWeight = 14;
+                }
+                if (dgvHoaDon.Columns.Contains("TrangThai"))
+                {
+                    dgvHoaDon.Columns["TrangThai"].HeaderText = "Trạng thái";
+                    dgvHoaDon.Columns["TrangThai"].FillWeight = 16;
+                }
 
                 decimal tongDoanhThu = 0;
-                foreach (DataRow r in dt.Rows)
+                foreach (DataRow row in dt.Rows)
                 {
-                    if (r["Tổng tiền"] != DBNull.Value)
-                        tongDoanhThu += Convert.ToDecimal(r["Tổng tiền"]);
+                    if (row["TrangThai"].ToString() == "Đã thanh toán")
+                    {
+                        tongDoanhThu += Convert.ToDecimal(row["TongTien"]);
+                    }
                 }
-                lblThongKe.Text = $"Tìm thấy: {dt.Rows.Count} hóa đơn  |  Tổng cộng: {tongDoanhThu:N0} VNĐ";
 
-                if (dt.Rows.Count == 0)
+                lblSoLuongHD.Text = $"Tổng số hóa đơn: {dt.Rows.Count}";
+                lblTongDoanhThu.Text = $"TỔNG DOANH THU: {tongDoanhThu:N0} VNĐ";
+
+                if (dt.Rows.Count > 0)
+                {
+                    int idDau = Convert.ToInt32(dt.Rows[0]["ID"]);
+                    string banDau = dt.Rows[0]["TenBan"]?.ToString() ?? "";
+                    TaiChiTietHoaDon(idDau, banDau);
+                }
+                else
+                {
                     dgvChiTiet.DataSource = null;
+                    lblThongTinHD.Text = "Không có dữ liệu hóa đơn";
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi tìm kiếm hóa đơn: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi tra cứu hóa đơn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void HienThiChiTiet(int idHD)
+        private void TaiChiTietHoaDon(int idHD, string tenBan)
         {
-            string queryCT = @"
-                SELECT m.Tenmon AS [Tên món],
-                       ct.SoLuong AS [Số lượng],
-                       ct.DonGia AS [Đơn giá],
-                       ct.ThanhTien AS [Thành tiền]
-                FROM CTHD ct
-                JOIN Menu m ON ct.IDm = m.ID
-                WHERE ct.IDhd = @IDhd";
+            try
+            {
+                lblThongTinHD.Text = $"HÓA ĐƠN #{idHD}  -  {tenBan.ToUpper()}";
+                string sql = @"
+                    SELECT m.Tenmon, ct.SoLuong, ct.DonGia, ct.ThanhTien
+                    FROM CTHD ct
+                    JOIN Menu m ON ct.IDm = m.ID
+                    WHERE ct.IDhd = @IDhd";
 
-            DataTable dtCT = ketnoi.LayDuLieu(queryCT, new[] { new SqlParameter("@IDhd", idHD) });
-            dgvChiTiet.DataSource = dtCT;
+                DataTable dt = ketnoi.LayDuLieu(sql, new[] { new SqlParameter("@IDhd", idHD) });
+                dgvChiTiet.DataSource = dt;
 
-            if (dgvChiTiet.Columns["Đơn giá"] != null)
-                dgvChiTiet.Columns["Đơn giá"].DefaultCellStyle.Format = "N0";
-            if (dgvChiTiet.Columns["Thành tiền"] != null)
-                dgvChiTiet.Columns["Thành tiền"].DefaultCellStyle.Format = "N0";
+                dgvChiTiet.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+
+                if (dgvChiTiet.Columns.Contains("Tenmon"))
+                {
+                    dgvChiTiet.Columns["Tenmon"].HeaderText = "Tên món";
+                    dgvChiTiet.Columns["Tenmon"].FillWeight = 50;
+                }
+                if (dgvChiTiet.Columns.Contains("SoLuong"))
+                {
+                    dgvChiTiet.Columns["SoLuong"].HeaderText = "SL";
+                    dgvChiTiet.Columns["SoLuong"].FillWeight = 10;
+                }
+                if (dgvChiTiet.Columns.Contains("DonGia"))
+                {
+                    dgvChiTiet.Columns["DonGia"].HeaderText = "Đơn giá";
+                    dgvChiTiet.Columns["DonGia"].DefaultCellStyle.Format = "N0";
+                    dgvChiTiet.Columns["DonGia"].FillWeight = 20;
+                }
+                if (dgvChiTiet.Columns.Contains("ThanhTien"))
+                {
+                    dgvChiTiet.Columns["ThanhTien"].HeaderText = "Thành tiền";
+                    dgvChiTiet.Columns["ThanhTien"].DefaultCellStyle.Format = "N0";
+                    dgvChiTiet.Columns["ThanhTien"].FillWeight = 20;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi tải chi tiết hóa đơn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

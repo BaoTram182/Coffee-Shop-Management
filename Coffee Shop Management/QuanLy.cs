@@ -8,517 +8,426 @@ namespace Coffee_Shop_Management
 {
     public partial class QuanLy : Form
     {
-        private int idMonDangChon = -1;
-        private int idDMDangChon = -1;
-        private int idBanDangChon = -1;
-
         public QuanLy()
         {
             InitializeComponent();
-            TrangTriGiaoDien();
+            this.DoubleBuffered = true;
+
+            DinhDangBang(dgvMon);
+            DinhDangBang(dgvBan);
+            DinhDangBang(dgvTaiKhoan);
+            DinhDangBang(dgvLichSuDN);
+            GanSuKienNut();
 
             Load += (s, e) =>
             {
-                LoadDanhMuc();
-                LoadDanhSachMon();
-                LoadDanhSachBan();
-                LoadDanhSachTaiKhoan();
+                try
+                {
+                    LoadDanhMuc();
+                    LoadDanhSachMon();
+                    LoadDanhSachBan();
+                    LoadDanhSachTaiKhoan();
+                    LoadLichSuDangNhap(true);
+                    if (cbLoaiBan.Items.Count > 0) cbLoaiBan.SelectedIndex = 0;
+                    if (cbQuyen.Items.Count > 0) cbQuyen.SelectedIndex = 1;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi tải dữ liệu quản trị: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             };
+        }
 
-            // Click dòng trên bảng Món
+        private void DinhDangBang(DataGridView dgv)
+        {
+            dgv.EnableHeadersVisualStyles = false;
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = CoffeeTheme.EspressoDark;
+            dgv.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+            dgv.DefaultCellStyle.Font = new Font("Segoe UI", 10.5F);
+            dgv.DefaultCellStyle.SelectionBackColor = Color.FromArgb(255, 224, 178);
+            dgv.DefaultCellStyle.SelectionForeColor = CoffeeTheme.EspressoDark;
+            dgv.AlternatingRowsDefaultCellStyle.BackColor = CoffeeTheme.CreamBg;
+        }
+
+        private void GanSuKienNut()
+        {
+            btnDongQuanLy.Cursor = Cursors.Hand;
+            btnDongQuanLy.Click += (s, e) => this.Close();
+
             dgvMon.CellClick += (s, e) =>
             {
-                if (e.RowIndex < 0) return;
-                DataGridViewRow row = dgvMon.Rows[e.RowIndex];
-                idMonDangChon = Convert.ToInt32(row.Cells["ID"].Value);
-                txtTenMon.Text = row.Cells["Tenmon"].Value.ToString();
-                cbDanhMuc.SelectedValue = row.Cells["IDdmm"].Value;
-                numDonGia.Value = Convert.ToDecimal(row.Cells["DonGia"].Value);
+                if (e.RowIndex >= 0 && dgvMon.CurrentRow != null)
+                {
+                    txtIDMon.Text = dgvMon.CurrentRow.Cells["ID"].Value?.ToString();
+                    txtTenMon.Text = dgvMon.CurrentRow.Cells["Tenmon"].Value?.ToString();
+                    txtDonGia.Text = Convert.ToDecimal(dgvMon.CurrentRow.Cells["DonGia"].Value).ToString("0");
+                    if (dgvMon.CurrentRow.Cells["IDdmm"].Value != null)
+                        cbDanhMuc.SelectedValue = Convert.ToInt32(dgvMon.CurrentRow.Cells["IDdmm"].Value);
+                }
             };
 
-            // Click dòng trên bảng Danh mục
-            dgvDanhMuc.CellClick += (s, e) =>
+            btnThemMon.Click += (s, e) => ThemMon();
+            btnSuaMon.Click += (s, e) => SuaMon();
+            btnXoaMon.Click += (s, e) => XoaMon();
+            btnLamMoiMon.Click += (s, e) =>
             {
-                if (e.RowIndex < 0) return;
-                DataGridViewRow row = dgvDanhMuc.Rows[e.RowIndex];
-                idDMDangChon = Convert.ToInt32(row.Cells["ID"].Value);
-                txtTenDM.Text = row.Cells["TenDanhMuc"].Value.ToString();
+                txtIDMon.Clear();
+                txtTenMon.Clear();
+                txtDonGia.Clear();
+                if (cbDanhMuc.Items.Count > 0) cbDanhMuc.SelectedIndex = 0;
             };
 
-            // Click dòng trên bảng Bàn
             dgvBan.CellClick += (s, e) =>
             {
-                if (e.RowIndex < 0) return;
-                DataGridViewRow row = dgvBan.Rows[e.RowIndex];
-                idBanDangChon = Convert.ToInt32(row.Cells["ID"].Value);
-                txtTenBan.Text = row.Cells["TenBan"].Value.ToString();
-                cbLoaiBan.Text = row.Cells["Loai"].Value?.ToString() ?? "";
+                if (e.RowIndex >= 0 && dgvBan.CurrentRow != null)
+                {
+                    txtIDBan.Text = dgvBan.CurrentRow.Cells["ID"].Value?.ToString();
+                    txtTenBan.Text = dgvBan.CurrentRow.Cells["TenBan"].Value?.ToString();
+                    string loai = dgvBan.CurrentRow.Cells["Loai"].Value?.ToString() ?? "";
+                    if (cbLoaiBan.Items.Contains(loai)) cbLoaiBan.SelectedItem = loai;
+                }
             };
 
-            // Click dòng trên bảng Tài khoản
+            btnThemBan.Click += (s, e) => ThemBan();
+            btnSuaBan.Click += (s, e) => SuaBan();
+            btnXoaBan.Click += (s, e) => XoaBan();
+            btnLamMoiBan.Click += (s, e) =>
+            {
+                txtIDBan.Clear();
+                txtTenBan.Clear();
+                if (cbLoaiBan.Items.Count > 0) cbLoaiBan.SelectedIndex = 0;
+            };
+
             dgvTaiKhoan.CellClick += (s, e) =>
             {
-                if (e.RowIndex < 0) return;
-                DataGridViewRow row = dgvTaiKhoan.Rows[e.RowIndex];
-                txtTenTK.Text = row.Cells["TenTK"].Value.ToString();
-                string quyen = row.Cells["Quyen"].Value?.ToString() ?? "Nhân viên";
-                cbQuyenTK.SelectedItem = cbQuyenTK.Items.Contains(quyen) ? quyen : "Nhân viên";
-                txtMKMoi.Clear();
+                if (e.RowIndex >= 0 && dgvTaiKhoan.CurrentRow != null)
+                {
+                    txtTenTK.Text = dgvTaiKhoan.CurrentRow.Cells["TenTK"].Value?.ToString();
+                    txtMatKhau.Text = dgvTaiKhoan.CurrentRow.Cells["MK"].Value?.ToString();
+                    string quyen = dgvTaiKhoan.CurrentRow.Cells["Quyen"].Value?.ToString() ?? "NhanVien";
+                    if (cbQuyen.Items.Contains(quyen)) cbQuyen.SelectedItem = quyen;
+                }
             };
 
-            // Sự kiện các nút Tab 1: Món
-            btnThemMon.Click += BtnThemMon_Click;
-            btnSuaMon.Click += BtnSuaMon_Click;
-            btnXoaMon.Click += BtnXoaMon_Click;
-            btnLamMoiMon.Click += (s, e) => ResetFormMon();
+            btnThemTK.Click += (s, e) => ThemTaiKhoan();
+            btnSuaTK.Click += (s, e) => SuaTaiKhoan();
+            btnXoaTK.Click += (s, e) => XoaTaiKhoan();
+            btnLamMoiTK.Click += (s, e) =>
+            {
+                txtTenTK.Clear();
+                txtMatKhau.Clear();
+                if (cbQuyen.Items.Count > 0) cbQuyen.SelectedIndex = 1;
+            };
 
-            // Sự kiện các nút Tab 2: Danh mục
-            btnThemDM.Click += BtnThemDM_Click;
-            btnSuaDM.Click += BtnSuaDM_Click;
-            btnXoaDM.Click += BtnXoaDM_Click;
-            btnLamMoiDM.Click += (s, e) => ResetFormDM();
+            btnHomNayDN.Click += (s, e) =>
+            {
+                dtpNgayDN.Value = DateTime.Today;
+                btnHomNayDN.BackColor = CoffeeTheme.EspressoDark;
+                btnHomNayDN.ForeColor = Color.White;
+                btnTatCaDN.BackColor = CoffeeTheme.CreamBg;
+                btnTatCaDN.ForeColor = CoffeeTheme.EspressoDark;
+                LoadLichSuDangNhap(true);
+            };
 
-            // Sự kiện các nút Tab 3: Bàn
-            btnThemBan.Click += BtnThemBan_Click;
-            btnSuaBan.Click += BtnSuaBan_Click;
-            btnXoaBan.Click += BtnXoaBan_Click;
-            btnLamMoiBan.Click += (s, e) => ResetFormBan();
+            btnTatCaDN.Click += (s, e) =>
+            {
+                btnTatCaDN.BackColor = CoffeeTheme.EspressoDark;
+                btnTatCaDN.ForeColor = Color.White;
+                btnHomNayDN.BackColor = CoffeeTheme.CreamBg;
+                btnHomNayDN.ForeColor = CoffeeTheme.EspressoDark;
+                LoadLichSuDangNhap(false);
+            };
 
-            // Sự kiện các nút Tab 4: Tài khoản
-            btnCapNhatTK.Click += BtnCapNhatTK_Click;
-            btnXoaTK.Click += BtnXoaTK_Click;
-            btnLamMoiTK.Click += (s, e) => ResetFormTK();
+            btnLocDN.Click += (s, e) =>
+            {
+                btnHomNayDN.BackColor = CoffeeTheme.CreamBg;
+                btnHomNayDN.ForeColor = CoffeeTheme.EspressoDark;
+                btnTatCaDN.BackColor = CoffeeTheme.CreamBg;
+                btnTatCaDN.ForeColor = CoffeeTheme.EspressoDark;
+                LoadLichSuDangNhap(true);
+            };
         }
 
-        private void TrangTriGiaoDien()
-        {
-            UIHelper.StyleDataGridView(dgvMon);
-            UIHelper.StyleDataGridView(dgvDanhMuc);
-            UIHelper.StyleDataGridView(dgvBan);
-            UIHelper.StyleDataGridView(dgvTaiKhoan);
-
-            Color grayBtn = Color.FromArgb(120, 144, 156);
-            Color grayHover = Color.FromArgb(144, 164, 174);
-
-            // Tab Món
-            UIHelper.StyleFlatRoundedButton(btnThemMon, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229), Color.White, CoffeeIcons.Plus(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnSuaMon, CoffeeTheme.WarningOrange, Color.FromArgb(251, 140, 0), Color.White, CoffeeIcons.Edit(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnXoaMon, CoffeeTheme.DangerRed, Color.FromArgb(229, 57, 53), Color.White, CoffeeIcons.Trash(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnLamMoiMon, grayBtn, grayHover, Color.White);
-
-            // Tab Danh mục
-            UIHelper.StyleFlatRoundedButton(btnThemDM, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229), Color.White, CoffeeIcons.Plus(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnSuaDM, CoffeeTheme.WarningOrange, Color.FromArgb(251, 140, 0), Color.White, CoffeeIcons.Edit(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnXoaDM, CoffeeTheme.DangerRed, Color.FromArgb(229, 57, 53), Color.White, CoffeeIcons.Trash(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnLamMoiDM, grayBtn, grayHover, Color.White);
-
-            // Tab Bàn
-            UIHelper.StyleFlatRoundedButton(btnThemBan, CoffeeTheme.PrimaryBlue, Color.FromArgb(30, 136, 229), Color.White, CoffeeIcons.Plus(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnSuaBan, CoffeeTheme.WarningOrange, Color.FromArgb(251, 140, 0), Color.White, CoffeeIcons.Edit(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnXoaBan, CoffeeTheme.DangerRed, Color.FromArgb(229, 57, 53), Color.White, CoffeeIcons.Trash(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnLamMoiBan, grayBtn, grayHover, Color.White);
-
-            // Tab Tài khoản
-            UIHelper.StyleFlatRoundedButton(btnCapNhatTK, CoffeeTheme.SuccessGreen, Color.FromArgb(67, 160, 71), Color.White, CoffeeIcons.Check(Color.White, 18));
-            UIHelper.StyleFlatRoundedButton(btnXoaTK, CoffeeTheme.DangerRed, Color.FromArgb(229, 57, 53), Color.White, CoffeeIcons.Trash(Color.White, 16));
-            UIHelper.StyleFlatRoundedButton(btnLamMoiTK, grayBtn, grayHover, Color.White);
-        }
-
-        // ==================== TAB 1: QUẢN LÝ MÓN ====================
         private void LoadDanhMuc()
         {
             DataTable dt = ketnoi.LayDuLieu("SELECT ID, TenDanhMuc FROM DanhMucMon ORDER BY ID");
             cbDanhMuc.DisplayMember = "TenDanhMuc";
             cbDanhMuc.ValueMember = "ID";
-            cbDanhMuc.DataSource = dt.Copy();
-
-            dgvDanhMuc.DataSource = dt;
-            if (dgvDanhMuc.Columns.Contains("ID")) dgvDanhMuc.Columns["ID"].Width = 60;
-            if (dgvDanhMuc.Columns.Contains("TenDanhMuc")) dgvDanhMuc.Columns["TenDanhMuc"].HeaderText = "Tên danh mục";
+            cbDanhMuc.DataSource = dt;
         }
 
         private void LoadDanhSachMon()
         {
             string sql = @"
-                SELECT m.ID, m.Tenmon, dm.TenDanhMuc AS DanhMuc, m.DonGia, m.IDdmm
+                SELECT m.ID, m.Tenmon, dm.TenDanhMuc, m.DonGia, m.IDdmm
                 FROM Menu m
-                JOIN DanhMucMon dm ON m.IDdmm = dm.ID
+                LEFT JOIN DanhMucMon dm ON m.IDdmm = dm.ID
                 ORDER BY m.ID ASC";
             dgvMon.DataSource = ketnoi.LayDuLieu(sql);
-
             if (dgvMon.Columns.Contains("IDdmm")) dgvMon.Columns["IDdmm"].Visible = false;
-            if (dgvMon.Columns.Contains("ID")) dgvMon.Columns["ID"].Width = 50;
+            if (dgvMon.Columns.Contains("ID")) dgvMon.Columns["ID"].HeaderText = "Mã";
             if (dgvMon.Columns.Contains("Tenmon")) dgvMon.Columns["Tenmon"].HeaderText = "Tên món";
-            if (dgvMon.Columns.Contains("DanhMuc")) dgvMon.Columns["DanhMuc"].HeaderText = "Danh mục";
+            if (dgvMon.Columns.Contains("TenDanhMuc")) dgvMon.Columns["TenDanhMuc"].HeaderText = "Danh mục";
             if (dgvMon.Columns.Contains("DonGia"))
             {
                 dgvMon.Columns["DonGia"].HeaderText = "Đơn giá";
                 dgvMon.Columns["DonGia"].DefaultCellStyle.Format = "N0";
             }
-            dgvMon.ClearSelection();
         }
 
-        private void ResetFormMon()
+        private void ThemMon()
         {
-            idMonDangChon = -1;
-            txtTenMon.Clear();
-            numDonGia.Value = 0;
-            if (cbDanhMuc.Items.Count > 0) cbDanhMuc.SelectedIndex = 0;
-            txtTenMon.Focus();
-        }
-
-        private void BtnThemMon_Click(object sender, EventArgs e)
-        {
-            string tenMon = txtTenMon.Text.Trim();
-            if (string.IsNullOrEmpty(tenMon) || cbDanhMuc.SelectedValue == null)
+            if (string.IsNullOrWhiteSpace(txtTenMon.Text) || !decimal.TryParse(txtDonGia.Text, out decimal gia) || gia < 0)
             {
-                MessageBox.Show("Vui lòng nhập Tên món và chọn Danh mục!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập tên món và đơn giá hợp lệ!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            try
-            {
-                ketnoi.ThucThiLenh(
-                    "INSERT INTO Menu (Tenmon, IDdmm, DonGia) VALUES (@Ten, @IDdm, @Gia)",
-                    new[] {
-                        new SqlParameter("@Ten", tenMon),
-                        new SqlParameter("@IDdm", Convert.ToInt32(cbDanhMuc.SelectedValue)),
-                        new SqlParameter("@Gia", numDonGia.Value)
-                    });
+            ketnoi.ThucThiLenh(
+                "INSERT INTO Menu (Tenmon, IDdmm, DonGia) VALUES (@Ten, @IDdm, @Gia)",
+                new[]
+                {
+                    new SqlParameter("@Ten", txtTenMon.Text.Trim()),
+                    new SqlParameter("@IDdm", cbDanhMuc.SelectedValue),
+                    new SqlParameter("@Gia", gia)
+                });
+            LoadDanhSachMon();
+            MessageBox.Show("Đã thêm món mới thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
-                MessageBox.Show("Thêm món mới thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        private void SuaMon()
+        {
+            if (!int.TryParse(txtIDMon.Text, out int idMon))
+            {
+                MessageBox.Show("Vui lòng chọn món cần sửa trong bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(txtTenMon.Text) || !decimal.TryParse(txtDonGia.Text, out decimal gia) || gia < 0)
+            {
+                MessageBox.Show("Vui lòng nhập tên món và đơn giá hợp lệ!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ketnoi.ThucThiLenh(
+                "UPDATE Menu SET Tenmon = @Ten, IDdmm = @IDdm, DonGia = @Gia WHERE ID = @ID",
+                new[]
+                {
+                    new SqlParameter("@Ten", txtTenMon.Text.Trim()),
+                    new SqlParameter("@IDdm", cbDanhMuc.SelectedValue),
+                    new SqlParameter("@Gia", gia),
+                    new SqlParameter("@ID", idMon)
+                });
+            LoadDanhSachMon();
+            MessageBox.Show("Đã cập nhật món thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void XoaMon()
+        {
+            if (!int.TryParse(txtIDMon.Text, out int idMon))
+            {
+                MessageBox.Show("Vui lòng chọn món cần xóa trong bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"Xác nhận xóa món '{txtTenMon.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                ketnoi.ThucThiLenh("DELETE FROM Menu WHERE ID = @ID", new[] { new SqlParameter("@ID", idMon) });
+                txtIDMon.Clear();
+                txtTenMon.Clear();
+                txtDonGia.Clear();
                 LoadDanhSachMon();
-                ResetFormMon();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi thêm món: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnSuaMon_Click(object sender, EventArgs e)
-        {
-            if (idMonDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn một món trong bảng bên trái để sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                ketnoi.ThucThiLenh(
-                    "UPDATE Menu SET Tenmon = @Ten, IDdmm = @IDdm, DonGia = @Gia WHERE ID = @ID",
-                    new[] {
-                        new SqlParameter("@Ten", txtTenMon.Text.Trim()),
-                        new SqlParameter("@IDdm", Convert.ToInt32(cbDanhMuc.SelectedValue)),
-                        new SqlParameter("@Gia", numDonGia.Value),
-                        new SqlParameter("@ID", idMonDangChon)
-                    });
-
-                MessageBox.Show("Cập nhật món thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhSachMon();
-                ResetFormMon();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi sửa món: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnXoaMon_Click(object sender, EventArgs e)
-        {
-            if (idMonDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn món cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (MessageBox.Show($"Bạn có chắc muốn xóa món '{txtTenMon.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            try
-            {
-                ketnoi.ThucThiLenh("DELETE FROM Menu WHERE ID = @ID", new[] { new SqlParameter("@ID", idMonDangChon) });
-                MessageBox.Show("Đã xóa món thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhSachMon();
-                ResetFormMon();
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Không thể xóa món này vì đã có trong lịch sử hóa đơn cũ!", "Ràng buộc dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        // ==================== TAB 2: QUẢN LÝ DANH MỤC ====================
-        private void ResetFormDM()
-        {
-            idDMDangChon = -1;
-            txtTenDM.Clear();
-            txtTenDM.Focus();
-        }
-
-        private void BtnThemDM_Click(object sender, EventArgs e)
-        {
-            string tenDM = txtTenDM.Text.Trim();
-            if (string.IsNullOrEmpty(tenDM))
-            {
-                MessageBox.Show("Vui lòng nhập Tên danh mục!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                ketnoi.ThucThiLenh("INSERT INTO DanhMucMon (TenDanhMuc) VALUES (@Ten)", new[] { new SqlParameter("@Ten", tenDM) });
-                MessageBox.Show("Thêm danh mục mới thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhMuc();
-                ResetFormDM();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi thêm danh mục: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnSuaDM_Click(object sender, EventArgs e)
-        {
-            if (idDMDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn danh mục cần sửa trong bảng bên trái!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                ketnoi.ThucThiLenh(
-                    "UPDATE DanhMucMon SET TenDanhMuc = @Ten WHERE ID = @ID",
-                    new[] { new SqlParameter("@Ten", txtTenDM.Text.Trim()), new SqlParameter("@ID", idDMDangChon) });
-
-                MessageBox.Show("Cập nhật danh mục thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhMuc();
-                LoadDanhSachMon();
-                ResetFormDM();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi sửa danh mục: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnXoaDM_Click(object sender, EventArgs e)
-        {
-            if (idDMDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn danh mục cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (MessageBox.Show($"Bạn có chắc muốn xóa danh mục '{txtTenDM.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            try
-            {
-                ketnoi.ThucThiLenh("DELETE FROM DanhMucMon WHERE ID = @ID", new[] { new SqlParameter("@ID", idDMDangChon) });
-                MessageBox.Show("Đã xóa danh mục thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhMuc();
-                ResetFormDM();
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Không thể xóa danh mục này vì vẫn còn món thuộc danh mục đó!", "Ràng buộc dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        // ==================== TAB 3: QUẢN LÝ BÀN ====================
         private void LoadDanhSachBan()
         {
-            dgvBan.DataSource = ketnoi.LayDuLieu("SELECT ID, TenBan, Loai, TrangThai FROM Ban ORDER BY ID");
-            if (dgvBan.Columns.Contains("ID")) dgvBan.Columns["ID"].Width = 50;
+            dgvBan.DataSource = ketnoi.LayDuLieu("SELECT ID, TenBan, Loai, TrangThai FROM Ban ORDER BY ID ASC");
+            if (dgvBan.Columns.Contains("ID")) dgvBan.Columns["ID"].HeaderText = "Mã bàn";
             if (dgvBan.Columns.Contains("TenBan")) dgvBan.Columns["TenBan"].HeaderText = "Tên bàn";
-            if (dgvBan.Columns.Contains("Loai")) dgvBan.Columns["Loai"].HeaderText = "Khu vực / Loại";
+            if (dgvBan.Columns.Contains("Loai")) dgvBan.Columns["Loai"].HeaderText = "Khu vực";
             if (dgvBan.Columns.Contains("TrangThai")) dgvBan.Columns["TrangThai"].HeaderText = "Trạng thái";
         }
 
-        private void ResetFormBan()
+        private void ThemBan()
         {
-            idBanDangChon = -1;
-            txtTenBan.Clear();
-            cbLoaiBan.SelectedIndex = -1;
-            txtTenBan.Focus();
-        }
-
-        private void BtnThemBan_Click(object sender, EventArgs e)
-        {
-            string tenBan = txtTenBan.Text.Trim();
-            string loaiBan = cbLoaiBan.Text.Trim();
-
-            if (string.IsNullOrEmpty(tenBan))
+            if (string.IsNullOrWhiteSpace(txtTenBan.Text))
             {
-                MessageBox.Show("Vui lòng nhập Tên bàn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập tên bàn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            try
-            {
-                ketnoi.ThucThiLenh(
-                    "INSERT INTO Ban (TenBan, Loai, TrangThai) VALUES (@Ten, @Loai, N'Trống')",
-                    new[] {
-                        new SqlParameter("@Ten", tenBan),
-                        new SqlParameter("@Loai", loaiBan)
-                    });
+            ketnoi.ThucThiLenh(
+                "INSERT INTO Ban (TenBan, Loai, TrangThai) VALUES (@Ten, @Loai, N'Trống')",
+                new[]
+                {
+                    new SqlParameter("@Ten", txtTenBan.Text.Trim()),
+                    new SqlParameter("@Loai", cbLoaiBan.Text)
+                });
+            LoadDanhSachBan();
+            MessageBox.Show("Đã thêm bàn mới thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
-                MessageBox.Show("Thêm bàn mới thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        private void SuaBan()
+        {
+            if (!int.TryParse(txtIDBan.Text, out int idBan) || string.IsNullOrWhiteSpace(txtTenBan.Text))
+            {
+                MessageBox.Show("Vui lòng chọn bàn cần sửa trong bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ketnoi.ThucThiLenh(
+                "UPDATE Ban SET TenBan = @Ten, Loai = @Loai WHERE ID = @ID",
+                new[]
+                {
+                    new SqlParameter("@Ten", txtTenBan.Text.Trim()),
+                    new SqlParameter("@Loai", cbLoaiBan.Text),
+                    new SqlParameter("@ID", idBan)
+                });
+            LoadDanhSachBan();
+            MessageBox.Show("Đã cập nhật thông tin bàn!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void XoaBan()
+        {
+            if (!int.TryParse(txtIDBan.Text, out int idBan))
+            {
+                MessageBox.Show("Vui lòng chọn bàn cần xóa trong bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"Xác nhận xóa '{txtTenBan.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                ketnoi.ThucThiLenh("DELETE FROM Ban WHERE ID = @ID", new[] { new SqlParameter("@ID", idBan) });
+                txtIDBan.Clear();
+                txtTenBan.Clear();
                 LoadDanhSachBan();
-                ResetFormBan();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi thêm bàn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnSuaBan_Click(object sender, EventArgs e)
-        {
-            if (idBanDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn bàn cần sửa trong bảng bên trái!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                ketnoi.ThucThiLenh(
-                    "UPDATE Ban SET TenBan = @Ten, Loai = @Loai WHERE ID = @ID",
-                    new[] {
-                        new SqlParameter("@Ten", txtTenBan.Text.Trim()),
-                        new SqlParameter("@Loai", cbLoaiBan.Text.Trim()),
-                        new SqlParameter("@ID", idBanDangChon)
-                    });
-
-                MessageBox.Show("Cập nhật thông tin bàn thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhSachBan();
-                ResetFormBan();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi sửa bàn: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnXoaBan_Click(object sender, EventArgs e)
-        {
-            if (idBanDangChon == -1)
-            {
-                MessageBox.Show("Vui lòng chọn bàn cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (MessageBox.Show($"Bạn có chắc muốn xóa '{txtTenBan.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            try
-            {
-                ketnoi.ThucThiLenh("DELETE FROM Ban WHERE ID = @ID", new[] { new SqlParameter("@ID", idBanDangChon) });
-                MessageBox.Show("Đã xóa bàn thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhSachBan();
-                ResetFormBan();
-            }
-            catch (Exception)
-            {
-                MessageBox.Show("Không thể xóa bàn này vì bàn đang có khách hoặc đã từng phát sinh hóa đơn!", "Ràng buộc dữ liệu", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-        }
-
-        // ==================== TAB 4: QUẢN LÝ TÀI KHOẢN ====================
         private void LoadDanhSachTaiKhoan()
         {
-            dgvTaiKhoan.DataSource = ketnoi.LayDuLieu("SELECT TenTK, Quyen FROM TaiKhoan ORDER BY Quyen, TenTK");
+            dgvTaiKhoan.DataSource = ketnoi.LayDuLieu("SELECT TenTK, MK, Quyen FROM TaiKhoan");
             if (dgvTaiKhoan.Columns.Contains("TenTK")) dgvTaiKhoan.Columns["TenTK"].HeaderText = "Tên tài khoản";
+            if (dgvTaiKhoan.Columns.Contains("MK")) dgvTaiKhoan.Columns["MK"].HeaderText = "Mật khẩu / PIN";
             if (dgvTaiKhoan.Columns.Contains("Quyen")) dgvTaiKhoan.Columns["Quyen"].HeaderText = "Quyền hạn";
         }
 
-        private void ResetFormTK()
+        private void ThemTaiKhoan()
         {
-            txtTenTK.Clear();
-            txtMKMoi.Clear();
-            cbQuyenTK.SelectedIndex = -1;
+            if (string.IsNullOrWhiteSpace(txtTenTK.Text) || string.IsNullOrWhiteSpace(txtMatKhau.Text))
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ tên tài khoản và mật khẩu!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int tonTai = Convert.ToInt32(ketnoi.LayGiaTriDon(
+                "SELECT COUNT(*) FROM TaiKhoan WHERE TenTK = @Ten",
+                new[] { new SqlParameter("@Ten", txtTenTK.Text.Trim()) }));
+
+            if (tonTai > 0)
+            {
+                MessageBox.Show("Tên tài khoản này đã tồn tại!", "Trùng tài khoản", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            ketnoi.ThucThiLenh(
+                "INSERT INTO TaiKhoan (TenTK, MK, Quyen) VALUES (@Ten, @MK, @Quyen)",
+                new[]
+                {
+                    new SqlParameter("@Ten", txtTenTK.Text.Trim()),
+                    new SqlParameter("@MK", txtMatKhau.Text.Trim()),
+                    new SqlParameter("@Quyen", cbQuyen.Text)
+                });
+            LoadDanhSachTaiKhoan();
+            MessageBox.Show("Đã thêm tài khoản thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void BtnCapNhatTK_Click(object sender, EventArgs e)
+        private void SuaTaiKhoan()
         {
-            string tenTK = txtTenTK.Text.Trim();
-            if (string.IsNullOrEmpty(tenTK))
+            if (string.IsNullOrWhiteSpace(txtTenTK.Text) || string.IsNullOrWhiteSpace(txtMatKhau.Text))
             {
-                MessageBox.Show("Vui lòng click chọn một tài khoản trong bảng bên trái!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn tài khoản và nhập mật khẩu mới!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            string quyenMoi = cbQuyenTK.SelectedItem?.ToString() ?? "Nhân viên";
-            string mkMoi = txtMKMoi.Text.Trim();
+            ketnoi.ThucThiLenh(
+                "UPDATE TaiKhoan SET MK = @MK, Quyen = @Quyen WHERE TenTK = @Ten",
+                new[]
+                {
+                    new SqlParameter("@MK", txtMatKhau.Text.Trim()),
+                    new SqlParameter("@Quyen", cbQuyen.Text),
+                    new SqlParameter("@Ten", txtTenTK.Text.Trim())
+                });
+            LoadDanhSachTaiKhoan();
+            MessageBox.Show("Đã cập nhật tài khoản thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
 
-            if (tenTK.Equals("admin", StringComparison.OrdinalIgnoreCase) && !quyenMoi.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+        private void XoaTaiKhoan()
+        {
+            if (string.IsNullOrWhiteSpace(txtTenTK.Text))
             {
-                MessageBox.Show("Không thể hạ quyền của tài khoản quản trị gốc 'admin'!", "Bảo vệ hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn tài khoản cần xóa trong bảng!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            try
+            if (MessageBox.Show($"Xác nhận xóa tài khoản '{txtTenTK.Text}'?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
-                if (string.IsNullOrEmpty(mkMoi))
-                {
-                    ketnoi.ThucThiLenh(
-                        "UPDATE TaiKhoan SET Quyen = @Quyen WHERE TenTK = @TenTK",
-                        new[] { new SqlParameter("@Quyen", quyenMoi), new SqlParameter("@TenTK", tenTK) });
-                }
-                else
-                {
-                    ketnoi.ThucThiLenh(
-                        "UPDATE TaiKhoan SET Quyen = @Quyen, MK = @MK WHERE TenTK = @TenTK",
-                        new[] {
-                            new SqlParameter("@Quyen", quyenMoi),
-                            new SqlParameter("@MK", mkMoi),
-                            new SqlParameter("@TenTK", tenTK)
-                        });
-                }
-
-                MessageBox.Show($"Đã cập nhật tài khoản '{tenTK}' thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                ketnoi.ThucThiLenh("DELETE FROM TaiKhoan WHERE TenTK = @Ten", new[] { new SqlParameter("@Ten", txtTenTK.Text.Trim()) });
+                txtTenTK.Clear();
+                txtMatKhau.Clear();
                 LoadDanhSachTaiKhoan();
-                ResetFormTK();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi cập nhật tài khoản: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        private void BtnXoaTK_Click(object sender, EventArgs e)
+        private void LoadLichSuDangNhap(bool locTheoNgay)
         {
-            string tenTK = txtTenTK.Text.Trim();
-            if (string.IsNullOrEmpty(tenTK))
+            string sql = @"
+                SELECT 
+                    ID,
+                    TenTK,
+                    Quyen,
+                    Checkin,
+                    Checkout,
+                    DATEDIFF(MINUTE, Checkin, ISNULL(Checkout, GETDATE())) AS SoPhutTruc,
+                    TrangThai
+                FROM LichSuDN";
+
+            DataTable dt;
+            if (locTheoNgay)
             {
-                MessageBox.Show("Vui lòng chọn tài khoản cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                DateTime tuNgay = dtpNgayDN.Value.Date;
+                DateTime denNgay = tuNgay.AddDays(1).AddSeconds(-1);
+                sql += " WHERE Checkin BETWEEN @TuNgay AND @DenNgay ORDER BY ID DESC";
+                dt = ketnoi.LayDuLieu(sql, new[]
+                {
+                    new SqlParameter("@TuNgay", tuNgay),
+                    new SqlParameter("@DenNgay", denNgay)
+                });
+            }
+            else
+            {
+                sql += " ORDER BY ID DESC";
+                dt = ketnoi.LayDuLieu(sql);
             }
 
-            if (tenTK.Equals("admin", StringComparison.OrdinalIgnoreCase))
-            {
-                MessageBox.Show("Không thể xóa tài khoản quản trị gốc 'admin'!", "Bảo vệ hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+            dgvLichSuDN.DataSource = dt;
 
-            if (MessageBox.Show($"Bạn có chắc muốn xóa vĩnh viễn tài khoản '{tenTK}'?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
-                return;
-
-            try
+            if (dgvLichSuDN.Columns.Contains("ID")) dgvLichSuDN.Columns["ID"].HeaderText = "Mã phiên";
+            if (dgvLichSuDN.Columns.Contains("TenTK")) dgvLichSuDN.Columns["TenTK"].HeaderText = "Tài khoản";
+            if (dgvLichSuDN.Columns.Contains("Quyen")) dgvLichSuDN.Columns["Quyen"].HeaderText = "Quyền";
+            if (dgvLichSuDN.Columns.Contains("Checkin"))
             {
-                ketnoi.ThucThiLenh("DELETE FROM TaiKhoan WHERE TenTK = @TenTK", new[] { new SqlParameter("@TenTK", tenTK) });
-                MessageBox.Show("Đã xóa tài khoản thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                LoadDanhSachTaiKhoan();
-                ResetFormTK();
+                dgvLichSuDN.Columns["Checkin"].HeaderText = "Ngày giờ Check-in";
+                dgvLichSuDN.Columns["Checkin"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
             }
-            catch (Exception ex)
+            if (dgvLichSuDN.Columns.Contains("Checkout"))
             {
-                MessageBox.Show("Lỗi khi xóa tài khoản: " + ex.Message, "Lỗi SQL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                dgvLichSuDN.Columns["Checkout"].HeaderText = "Ngày giờ Check-out";
+                dgvLichSuDN.Columns["Checkout"].DefaultCellStyle.Format = "dd/MM/yyyy HH:mm:ss";
             }
+            if (dgvLichSuDN.Columns.Contains("SoPhutTruc")) dgvLichSuDN.Columns["SoPhutTruc"].HeaderText = "Tổng phút";
+            if (dgvLichSuDN.Columns.Contains("TrangThai")) dgvLichSuDN.Columns["TrangThai"].HeaderText = "Trạng thái";
         }
     }
 }

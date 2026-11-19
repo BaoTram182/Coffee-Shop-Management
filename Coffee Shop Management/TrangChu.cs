@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
@@ -9,55 +8,42 @@ namespace Coffee_Shop_Management
         public TrangChu()
         {
             InitializeComponent();
-            TrangTriGiaoDien();
+            this.DoubleBuffered = true;
 
-            modn.Click += (s, e) =>
+            btnDangNhap.Text = "ĐĂNG NHẬP";
+            btnDangNhap.Cursor = Cursors.Hand;
+
+            btnDangKy.Text = "ĐĂNG KÝ";
+            btnDangKy.Cursor = Cursors.Hand;
+
+            btnThoat.Text = "THOÁT";
+            btnThoat.Cursor = Cursors.Hand;
+
+            Load += (s, e) =>
             {
-                DangNhap frmDangNhap = new DangNhap();
+                UIHelper.RoundControl(pnlCard, 18);
+                UIHelper.RoundControl(btnDangNhap, 14);
+                UIHelper.RoundControl(btnDangKy, 14);
+                UIHelper.RoundControl(btnThoat, 14);
+            };
+
+            btnDangNhap.Click += (s, e) =>
+            {
                 this.Hide();
-                frmDangNhap.ShowDialog();
-                if (!this.IsDisposed) this.Show();
+                DangNhap frmDN = new DangNhap();
+                frmDN.ShowDialog();
+                this.Show();
             };
 
-            modk.Click += (s, e) =>
+            btnDangKy.Click += (s, e) =>
             {
-                DangKy frmDangKy = new DangKy();
                 this.Hide();
-                if (frmDangKy.ShowDialog() == DialogResult.OK)
-                {
-                    DangNhap frmDangNhap = new DangNhap(frmDangKy.TenTaiKhoanVuaTao);
-                    frmDangNhap.ShowDialog();
-                }
-                if (!this.IsDisposed) this.Show();
+                DangKy frmDK = new DangKy();
+                frmDK.ShowDialog();
+                this.Show();
             };
 
-            bt.Click += (s, e) =>
-            {
-                if (MessageBox.Show("Bạn có chắc muốn thoát chương trình?", "Xác nhận", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    Application.Exit();
-                }
-            };
-        }
-
-        private void TrangTriGiaoDien()
-        {
-            this.BackColor = CoffeeTheme.CreamBg;
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-
-            PictureBox picLogo = new PictureBox
-            {
-                Size = new Size(48, 48),
-                Location = new Point(22, 18),
-                BackColor = Color.Transparent,
-                Image = CoffeeIcons.CoffeeCup(CoffeeTheme.EspressoDark, 44)
-            };
-            this.Controls.Add(picLogo);
-
-            UIHelper.StyleFlatRoundedButton(modn, CoffeeTheme.EspressoDark, Color.FromArgb(93, 64, 55), Color.White);
-            UIHelper.StyleFlatRoundedButton(modk, CoffeeTheme.SuccessGreen, Color.FromArgb(67, 160, 71), Color.White);
-            UIHelper.StyleFlatRoundedButton(bt, Color.FromArgb(224, 220, 215), Color.FromArgb(200, 195, 190), Color.FromArgb(60, 60, 60));
+            btnThoat.Click += (s, e) => Application.Exit();
         }
     }
 }
