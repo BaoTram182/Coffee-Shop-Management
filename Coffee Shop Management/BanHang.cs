@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
+using System.IO;
+using System.Net;
+using System.Text;
 using System.Windows.Forms;
 
 namespace Coffee_Shop_Management
@@ -13,6 +18,11 @@ namespace Coffee_Shop_Management
         private int idDanhMucDangChon = -1;
         private readonly string TenNhanVien;
         private readonly string QuyenHan;
+
+        private readonly string binQR = "970436";
+        private readonly string soTaiKhoanQR = "9337684994";
+        private readonly string chuTaiKhoanQR = "NGUYEN NGOC BAO TRAM";
+        private readonly string duongDanQRCoDinh = @"C:\Users\bao84\source\repos\qr_thanhtoan.jpg";
 
         public BanHang(string TenTK = "admin", string Quyen = "Admin")
         {
@@ -742,11 +752,12 @@ namespace Coffee_Shop_Management
             decimal tienKhachDua = tongTien;
             bool xacNhan = false;
             bool muonIn = true;
+            bool laChuyenKhoan = false;
 
             using (Form dlg = new Form())
             {
-                dlg.Text = $"Thanh toán cảm ứng - {tenBan}";
-                dlg.Size = new Size(560, 560);
+                dlg.Text = $"Thanh toán - {tenBan}";
+                dlg.Size = new Size(560, 600);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.MaximizeBox = false;
@@ -766,8 +777,8 @@ namespace Coffee_Shop_Management
 
                 TableLayoutPanel tblSummary = new TableLayoutPanel
                 {
-                    Location = new Point(20, 70),
-                    Size = new Size(504, 126),
+                    Location = new Point(20, 68),
+                    Size = new Size(504, 124),
                     ColumnCount = 2,
                     RowCount = 3,
                     BackColor = Color.White,
@@ -822,10 +833,70 @@ namespace Coffee_Shop_Management
                     }
                 }
 
+                TableLayoutPanel tblHinhThuc = new TableLayoutPanel
+                {
+                    Location = new Point(20, 200),
+                    Size = new Size(504, 44),
+                    ColumnCount = 2,
+                    RowCount = 1
+                };
+                tblHinhThuc.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+                tblHinhThuc.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+
+                RoundedButton btnTienMat = new RoundedButton
+                {
+                    Dock = DockStyle.Fill,
+                    Text = "TIỀN MẶT",
+                    Margin = new Padding(0, 0, 3, 0),
+                    BorderRadius = 10,
+                    BackColor = CoffeeTheme.EspressoDark,
+                    ForeColor = Color.White,
+                    Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
+                };
+
+                RoundedButton btnChuyenKhoanQR = new RoundedButton
+                {
+                    Dock = DockStyle.Fill,
+                    Text = "CHUYỂN KHOẢN (QR)",
+                    Margin = new Padding(3, 0, 0, 0),
+                    BorderRadius = 10,
+                    BackColor = Color.White,
+                    ForeColor = CoffeeTheme.PrimaryBlue,
+                    BorderSize = 1,
+                    BorderColor = CoffeeTheme.PrimaryBlue,
+                    Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
+                };
+
+                void DongBoMauHinhThuc()
+                {
+                    btnTienMat.BackColor = !laChuyenKhoan ? CoffeeTheme.EspressoDark : Color.White;
+                    btnTienMat.ForeColor = !laChuyenKhoan ? Color.White : CoffeeTheme.EspressoDark;
+
+                    btnChuyenKhoanQR.BackColor = laChuyenKhoan ? CoffeeTheme.PrimaryBlue : Color.White;
+                    btnChuyenKhoanQR.ForeColor = laChuyenKhoan ? Color.White : CoffeeTheme.PrimaryBlue;
+                }
+
+                btnTienMat.Click += (s, e) =>
+                {
+                    laChuyenKhoan = false;
+                    DongBoMauHinhThuc();
+                };
+
+                btnChuyenKhoanQR.Click += (s, e) =>
+                {
+                    laChuyenKhoan = true;
+                    tienKhachDua = tongTien;
+                    CapNhatHienThiTien();
+                    DongBoMauHinhThuc();
+                };
+
+                tblHinhThuc.Controls.Add(btnTienMat, 0, 0);
+                tblHinhThuc.Controls.Add(btnChuyenKhoanQR, 1, 0);
+
                 TableLayoutPanel tblMenhGia = new TableLayoutPanel
                 {
-                    Location = new Point(20, 208),
-                    Size = new Size(504, 54),
+                    Location = new Point(20, 252),
+                    Size = new Size(504, 52),
                     ColumnCount = 5,
                     RowCount = 1
                 };
@@ -857,6 +928,8 @@ namespace Coffee_Shop_Management
                     };
                     btnMG.Click += (s, e) =>
                     {
+                        laChuyenKhoan = false;
+                        DongBoMauHinhThuc();
                         tienKhachDua = item.GiaTri;
                         CapNhatHienThiTien();
                     };
@@ -865,8 +938,8 @@ namespace Coffee_Shop_Management
 
                 TableLayoutPanel tblNumpad = new TableLayoutPanel
                 {
-                    Location = new Point(20, 270),
-                    Size = new Size(504, 165),
+                    Location = new Point(20, 312),
+                    Size = new Size(504, 162),
                     ColumnCount = 4,
                     RowCount = 3
                 };
@@ -893,6 +966,8 @@ namespace Coffee_Shop_Management
 
                     btnSo.Click += (s, e) =>
                     {
+                        laChuyenKhoan = false;
+                        DongBoMauHinhThuc();
                         string chuoiHienTai = ((long)tienKhachDua).ToString();
                         if (kyTu == "Xóa hết") tienKhachDua = 0;
                         else if (kyTu == "Lùi 1 số")
@@ -908,28 +983,26 @@ namespace Coffee_Shop_Management
                     tblNumpad.Controls.Add(btnSo, idx % 4, idx / 4);
                 }
 
-                RoundedButton btnChotKhongIn = new RoundedButton
+                RoundedButton btnInHoaDon = new RoundedButton
                 {
-                    Text = "CHỐT ĐƠN (KHÔNG IN)",
-                    Location = new Point(20, 448),
+                    Text = "IN HÓA ĐƠN",
+                    Location = new Point(20, 486),
                     Size = new Size(215, 56),
                     BorderRadius = 12,
                     BackColor = CoffeeTheme.PrimaryBlue,
                     ForeColor = Color.White,
-                    Font = new Font("Segoe UI", 10F, FontStyle.Bold)
+                    Font = new Font("Segoe UI", 10.5F, FontStyle.Bold)
                 };
 
-                RoundedButton btnChotVaIn = new RoundedButton
+                RoundedButton btnThanhToan = new RoundedButton
                 {
-                    Text = "  THANH TOÁN & IN PHIẾU",
-                    Location = new Point(245, 448),
+                    Text = "THANH TOÁN",
+                    Location = new Point(245, 486),
                     Size = new Size(279, 56),
                     BorderRadius = 12,
                     BackColor = CoffeeTheme.SuccessGreen,
                     ForeColor = Color.White,
-                    Font = new Font("Segoe UI", 10.5F, FontStyle.Bold),
-                    Image = CoffeeIcons.Check(Color.White, 22),
-                    TextImageRelation = TextImageRelation.ImageBeforeText
+                    Font = new Font("Segoe UI", 11F, FontStyle.Bold)
                 };
 
                 void XuLyChot(bool inPhieu)
@@ -945,10 +1018,10 @@ namespace Coffee_Shop_Management
                     dlg.Close();
                 }
 
-                btnChotKhongIn.Click += (s, e) => XuLyChot(false);
-                btnChotVaIn.Click += (s, e) => XuLyChot(true);
+                btnInHoaDon.Click += (s, e) => XuLyChot(true);
+                btnThanhToan.Click += (s, e) => XuLyChot(true);
 
-                dlg.Controls.AddRange(new Control[] { pnlTop, tblSummary, tblMenhGia, tblNumpad, btnChotKhongIn, btnChotVaIn });
+                dlg.Controls.AddRange(new Control[] { pnlTop, tblSummary, tblHinhThuc, tblMenhGia, tblNumpad, btnInHoaDon, btnThanhToan });
                 dlg.ShowDialog(this);
             }
 
@@ -1099,10 +1172,160 @@ namespace Coffee_Shop_Management
             }
         }
 
+        private string TaoChuoiVietQR(int idHD, string tenBan, decimal tongTien)
+        {
+            string soTienStr = ((long)Math.Max(0, tongTien)).ToString();
+            string noiDung = $"HD{idHD} {tenBan}";
+            if (noiDung.Length > 25) noiDung = noiDung.Substring(0, 25);
+
+            string tlv(string id, string val) => $"{id}{val.Length:00}{val}";
+
+            string beneficiary = tlv("00", binQR) + tlv("01", soTaiKhoanQR);
+            string merchantInfo = tlv("00", "A000000727") + tlv("01", beneficiary) + tlv("02", "QRIBFTTA");
+            string addData = tlv("08", noiDung);
+
+            string payloadWithoutCrc =
+                tlv("00", "01") +
+                tlv("01", "12") +
+                tlv("38", merchantInfo) +
+                tlv("53", "704") +
+                tlv("54", soTienStr) +
+                tlv("58", "VN") +
+                tlv("59", chuTaiKhoanQR) +
+                tlv("62", addData) +
+                "6304";
+
+            ushort crc = 0xFFFF;
+            byte[] bytes = Encoding.ASCII.GetBytes(payloadWithoutCrc);
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                crc ^= (ushort)(bytes[i] << 8);
+                for (int b = 0; b < 8; b++)
+                {
+                    if ((crc & 0x8000) != 0)
+                        crc = (ushort)((crc << 1) ^ 0x1021);
+                    else
+                        crc = (ushort)(crc << 1);
+                }
+            }
+
+            return payloadWithoutCrc + crc.ToString("X4");
+        }
+
+        private Bitmap TaoAnhQRChuan(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
+        {
+            string noiDungQR = TaoChuoiVietQR(idHD, tenBan, tongTien);
+            bool[,] maTran = QrCodeMatrixBuilder.Build(noiDungQR);
+            int soO = maTran.GetLength(0);
+            int quietZone = 4;
+            int totalModules = soO + quietZone * 2;
+            int pixelPerModule = Math.Max(4, kichThuoc / totalModules);
+            int bmpSize = pixelPerModule * totalModules;
+
+            Bitmap bmp = new Bitmap(bmpSize, bmpSize);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.White);
+                using (Brush brushDen = new SolidBrush(Color.Black))
+                {
+                    for (int r = 0; r < soO; r++)
+                    {
+                        for (int c = 0; c < soO; c++)
+                        {
+                            if (maTran[r, c])
+                            {
+                                g.FillRectangle(
+                                    brushDen,
+                                    (c + quietZone) * pixelPerModule,
+                                    (r + quietZone) * pixelPerModule,
+                                    pixelPerModule,
+                                    pixelPerModule);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Bitmap ketQua = new Bitmap(kichThuoc, kichThuoc);
+            using (Graphics g2 = Graphics.FromImage(ketQua))
+            {
+                g2.Clear(Color.White);
+                g2.InterpolationMode = InterpolationMode.NearestNeighbor;
+                g2.PixelOffsetMode = PixelOffsetMode.Half;
+                g2.DrawImage(bmp, 0, 0, kichThuoc, kichThuoc);
+            }
+            bmp.Dispose();
+            return ketQua;
+        }
+
+        private Bitmap LayAnhVietQRChuan(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
+        {
+            string noiDungCK = Uri.EscapeDataString($"HD{idHD} {tenBan}");
+            string tenChuTK = Uri.EscapeDataString(chuTaiKhoanQR);
+            string url = $"https://img.vietqr.io/image/{binQR}-{soTaiKhoanQR}-qr_only.png?amount={(long)Math.Max(0, tongTien)}&addInfo={noiDungCK}&accountName={tenChuTK}";
+
+            try
+            {
+                ServicePointManager.Expect100Continue = true;
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
+                req.Timeout = 6000;
+                req.UserAgent = "Mozilla/5.0";
+
+                using (WebResponse resp = req.GetResponse())
+                using (Stream stream = resp.GetResponseStream())
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    stream.CopyTo(ms);
+                    ms.Position = 0;
+                    using (Image imgGoc = Image.FromStream(ms))
+                    {
+                        Bitmap bmp = new Bitmap(kichThuoc, kichThuoc);
+                        using (Graphics g = Graphics.FromImage(bmp))
+                        {
+                            g.Clear(Color.White);
+                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                            g.SmoothingMode = SmoothingMode.HighQuality;
+                            g.DrawImage(imgGoc, 0, 0, kichThuoc, kichThuoc);
+                        }
+                        return bmp;
+                    }
+                }
+            }
+            catch
+            {
+                return TaoAnhQRChuan(idHD, tenBan, tongTien, kichThuoc);
+            }
+        }
+
+        private Bitmap LayAnhQRCoDinh(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
+        {
+            if (File.Exists(duongDanQRCoDinh))
+            {
+                using (Image imgGoc = Image.FromFile(duongDanQRCoDinh))
+                {
+                    Bitmap bmp = new Bitmap(kichThuoc, kichThuoc);
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Color.White);
+                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        g.SmoothingMode = SmoothingMode.HighQuality;
+                        g.DrawImage(imgGoc, 0, 0, kichThuoc, kichThuoc);
+                    }
+                    return bmp;
+                }
+            }
+
+            return LayAnhVietQRChuan(idHD, tenBan, tongTien, kichThuoc);
+        }
+
         private void InHoaDon(int idHD, string tenBan, DataTable dtChiTiet, decimal tongTien, decimal tienKhachDua, decimal tienThoi)
         {
+            Bitmap qrChuanBi = LayAnhQRCoDinh(idHD, tenBan, tongTien, 196);
+
             PrintDocument printDoc = new PrintDocument();
-            int chieuCaoGiay = 390 + (dtChiTiet.Rows.Count * 28);
+            int chieuCaoGiay = 610 + (dtChiTiet.Rows.Count * 28);
             printDoc.DefaultPageSettings.PaperSize = new PaperSize("BillK80", 320, chieuCaoGiay);
 
             printDoc.PrintPage += (s, ev) =>
@@ -1116,7 +1339,7 @@ namespace Coffee_Shop_Management
                 Font fTong = new Font("Segoe UI", 10.5f, FontStyle.Bold);
 
                 Brush brushNau = new SolidBrush(Color.FromArgb(62, 39, 35));
-                Pen penNetDut = new Pen(Color.Gray, 1) { DashStyle = System.Drawing.Drawing2D.DashStyle.Dash };
+                Pen penNetDut = new Pen(Color.Gray, 1) { DashStyle = DashStyle.Dash };
                 StringFormat canGiua = new StringFormat { Alignment = StringAlignment.Center };
                 StringFormat canPhai = new StringFormat { Alignment = StringAlignment.Far };
 
@@ -1167,19 +1390,446 @@ namespace Coffee_Shop_Management
                 y += 20;
                 g.DrawString("Tiền thừa trả khách:", fDam, Brushes.Black, 14, y);
                 g.DrawString($"{tienThoi:N0} VNĐ", fDam, Brushes.Black, width - 14, y, canPhai);
-                y += 30;
+                y += 22;
+
+                if (qrChuanBi != null)
+                {
+                    g.DrawLine(penNetDut, 12, y, width - 12, y);
+                    y += 10;
+                    int qrX = (width - qrChuanBi.Width) / 2;
+                    g.DrawImage(qrChuanBi, qrX, y, qrChuanBi.Width, qrChuanBi.Height);
+                    y += qrChuanBi.Height + 10;
+                }
+
                 g.DrawString("Cảm ơn quý khách và hẹn gặp lại!", fSub, Brushes.Black, new RectangleF(0, y, width, 20), canGiua);
             };
 
-            using (PrintPreviewDialog previewDlg = new PrintPreviewDialog())
+            try
             {
-                previewDlg.Document = printDoc;
-                previewDlg.Text = $"Xem trước Phiếu thanh toán #{idHD} - {tenBan}";
-                previewDlg.Width = 520;
-                previewDlg.Height = 680;
-                previewDlg.StartPosition = FormStartPosition.CenterParent;
-                previewDlg.ShowDialog(this);
+                using (PrintPreviewDialog previewDlg = new PrintPreviewDialog())
+                {
+                    previewDlg.Document = printDoc;
+                    previewDlg.Text = $"Xem trước Phiếu thanh toán #{idHD} - {tenBan}";
+                    previewDlg.Width = 520;
+                    previewDlg.Height = 760;
+                    previewDlg.StartPosition = FormStartPosition.CenterParent;
+                    previewDlg.ShowDialog(this);
+                }
             }
+            finally
+            {
+                qrChuanBi?.Dispose();
+            }
+        }
+    }
+
+    internal static class QrCodeMatrixBuilder
+    {
+        private static readonly int[] GfExp = new int[512];
+        private static readonly int[] GfLog = new int[256];
+
+        private static readonly int[] TotalCodewords = {
+            0, 26, 44, 70, 100, 134, 172, 196, 242, 292
+        };
+
+        private static readonly int[] EcCodewordsL = {
+            0, 7, 10, 15, 20, 26, 18, 20, 24, 30
+        };
+
+        private static readonly int[] BlocksL = {
+            0, 1, 1, 1, 1, 1, 2, 2, 2, 2
+        };
+
+        private static readonly int[][] AlignCenters = {
+            null,
+            null,
+            new[] { 6, 18 },
+            new[] { 6, 22 },
+            new[] { 6, 26 },
+            new[] { 6, 30 },
+            new[] { 6, 34 },
+            new[] { 6, 22, 38 },
+            new[] { 6, 24, 42 },
+            new[] { 6, 26, 46 }
+        };
+
+        static QrCodeMatrixBuilder()
+        {
+            int x = 1;
+            for (int i = 0; i < 255; i++)
+            {
+                GfExp[i] = x;
+                GfLog[x] = i;
+                x <<= 1;
+                if ((x & 0x100) != 0) x ^= 0x11D;
+            }
+            for (int i = 255; i < 512; i++)
+            {
+                GfExp[i] = GfExp[i - 255];
+            }
+        }
+
+        private static int GfMul(int a, int b)
+        {
+            if (a == 0 || b == 0) return 0;
+            return GfExp[GfLog[a] + GfLog[b]];
+        }
+
+        private static byte[] CalcEc(byte[] data, int ecLen)
+        {
+            int[] gen = { 1 };
+            for (int i = 0; i < ecLen; i++)
+            {
+                int[] next = new int[gen.Length + 1];
+                int factor = GfExp[i];
+                for (int j = 0; j < gen.Length; j++)
+                {
+                    next[j] ^= gen[j];
+                    next[j + 1] ^= GfMul(gen[j], factor);
+                }
+                gen = next;
+            }
+
+            int[] msg = new int[data.Length + ecLen];
+            for (int i = 0; i < data.Length; i++) msg[i] = data[i];
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                int coef = msg[i];
+                if (coef != 0)
+                {
+                    for (int j = 1; j < gen.Length; j++)
+                    {
+                        msg[i + j] ^= GfMul(gen[j], coef);
+                    }
+                }
+            }
+
+            byte[] ec = new byte[ecLen];
+            for (int i = 0; i < ecLen; i++) ec[i] = (byte)msg[data.Length + i];
+            return ec;
+        }
+
+        public static bool[,] Build(string text)
+        {
+            byte[] rawBytes = Encoding.UTF8.GetBytes(text);
+            int version = 1;
+            for (int v = 1; v <= 9; v++)
+            {
+                int ecTotal = EcCodewordsL[v] * BlocksL[v];
+                int dataCap = TotalCodewords[v] - ecTotal;
+                int headerBits = 4 + 8;
+                int neededBytes = (headerBits + rawBytes.Length * 8 + 7) / 8;
+                if (neededBytes <= dataCap)
+                {
+                    version = v;
+                    break;
+                }
+                version = v;
+            }
+
+            int totalCw = TotalCodewords[version];
+            int ecCwPerBlock = EcCodewordsL[version];
+            int numBlocks = BlocksL[version];
+            int totalDataCw = totalCw - ecCwPerBlock * numBlocks;
+
+            List<int> bits = new List<int>();
+            void PushBits(int val, int len)
+            {
+                for (int i = len - 1; i >= 0; i--) bits.Add((val >> i) & 1);
+            }
+
+            PushBits(4, 4);
+            PushBits(rawBytes.Length, 8);
+            foreach (byte b in rawBytes) PushBits(b, 8);
+
+            int maxBits = totalDataCw * 8;
+            int term = Math.Min(4, maxBits - bits.Count);
+            if (term > 0) PushBits(0, term);
+            while (bits.Count % 8 != 0) bits.Add(0);
+
+            byte[] dataCw = new byte[totalDataCw];
+            int idx = 0;
+            for (int i = 0; i < bits.Count; i += 8)
+            {
+                int val = 0;
+                for (int j = 0; j < 8; j++) val = (val << 1) | bits[i + j];
+                dataCw[idx++] = (byte)val;
+            }
+            byte[] pads = { 0xEC, 0x11 };
+            int pIdx = 0;
+            while (idx < totalDataCw)
+            {
+                dataCw[idx++] = pads[pIdx % 2];
+                pIdx++;
+            }
+
+            int shortBlockLen = totalDataCw / numBlocks;
+            int longBlocks = totalDataCw % numBlocks;
+            byte[][] dataBlocks = new byte[numBlocks][];
+            byte[][] ecBlocks = new byte[numBlocks][];
+            int offset = 0;
+            for (int b = 0; b < numBlocks; b++)
+            {
+                int len = shortBlockLen + (b >= numBlocks - longBlocks ? 1 : 0);
+                dataBlocks[b] = new byte[len];
+                Array.Copy(dataCw, offset, dataBlocks[b], 0, len);
+                offset += len;
+                ecBlocks[b] = CalcEc(dataBlocks[b], ecCwPerBlock);
+            }
+
+            List<byte> finalCw = new List<byte>();
+            int maxLen = shortBlockLen + (longBlocks > 0 ? 1 : 0);
+            for (int i = 0; i < maxLen; i++)
+            {
+                for (int b = 0; b < numBlocks; b++)
+                {
+                    if (i < dataBlocks[b].Length) finalCw.Add(dataBlocks[b][i]);
+                }
+            }
+            for (int i = 0; i < ecCwPerBlock; i++)
+            {
+                for (int b = 0; b < numBlocks; b++)
+                {
+                    finalCw.Add(ecBlocks[b][i]);
+                }
+            }
+
+            int size = version * 4 + 17;
+            bool[,] grid = new bool[size, size];
+            bool[,] isFunc = new bool[size, size];
+
+            void PlaceFinder(int top, int left)
+            {
+                for (int r = -1; r <= 7; r++)
+                {
+                    for (int c = -1; c <= 7; c++)
+                    {
+                        int rr = top + r;
+                        int cc = left + c;
+                        if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+                        bool dark = r >= 0 && r <= 6 && c >= 0 && c <= 6 &&
+                                    (r == 0 || r == 6 || c == 0 || c == 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4));
+                        grid[rr, cc] = dark;
+                        isFunc[rr, cc] = true;
+                    }
+                }
+            }
+
+            PlaceFinder(0, 0);
+            PlaceFinder(0, size - 7);
+            PlaceFinder(size - 7, 0);
+
+            if (AlignCenters[version] != null)
+            {
+                int[] centers = AlignCenters[version];
+                for (int i = 0; i < centers.Length; i++)
+                {
+                    for (int j = 0; j < centers.Length; j++)
+                    {
+                        int r = centers[i];
+                        int c = centers[j];
+                        if (isFunc[r, c]) continue;
+                        for (int dr = -2; dr <= 2; dr++)
+                        {
+                            for (int dc = -2; dc <= 2; dc++)
+                            {
+                                bool dark = Math.Abs(dr) == 2 || Math.Abs(dc) == 2 || (dr == 0 && dc == 0);
+                                grid[r + dr, c + dc] = dark;
+                                isFunc[r + dr, c + dc] = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (int i = 8; i < size - 8; i++)
+            {
+                bool dark = (i % 2 == 0);
+                if (!isFunc[6, i]) { grid[6, i] = dark; isFunc[6, i] = true; }
+                if (!isFunc[i, 6]) { grid[i, 6] = dark; isFunc[i, 6] = true; }
+            }
+
+            grid[4 * version + 9, 8] = true;
+            isFunc[4 * version + 9, 8] = true;
+
+            for (int i = 0; i < 9; i++)
+            {
+                if (i < size)
+                {
+                    isFunc[8, i] = true;
+                    isFunc[i, 8] = true;
+                }
+                if (size - 1 - i >= 0)
+                {
+                    isFunc[8, size - 1 - i] = true;
+                    isFunc[size - 1 - i, 8] = true;
+                }
+            }
+
+            int bitCursor = 0;
+            bool goingUp = true;
+            for (int col = size - 1; col >= 1; col -= 2)
+            {
+                if (col == 6) col = 5;
+                for (int count = 0; count < size; count++)
+                {
+                    int row = goingUp ? (size - 1 - count) : count;
+                    for (int dc = 0; dc < 2; dc++)
+                    {
+                        int c = col - dc;
+                        if (!isFunc[row, c])
+                        {
+                            int cwIdx = bitCursor / 8;
+                            int bitOffset = 7 - (bitCursor % 8);
+                            bool bitVal = cwIdx < finalCw.Count && (((finalCw[cwIdx] >> bitOffset) & 1) == 1);
+                            grid[row, c] = bitVal;
+                            bitCursor++;
+                        }
+                    }
+                }
+                goingUp = !goingUp;
+            }
+
+            int bestMask = 0;
+            int bestPenalty = int.MaxValue;
+
+            for (int mask = 0; mask < 8; mask++)
+            {
+                bool[,] candidate = (bool[,])grid.Clone();
+                for (int r = 0; r < size; r++)
+                {
+                    for (int c = 0; c < size; c++)
+                    {
+                        if (isFunc[r, c]) continue;
+                        bool cond = false;
+                        switch (mask)
+                        {
+                            case 0: cond = (r + c) % 2 == 0; break;
+                            case 1: cond = r % 2 == 0; break;
+                            case 2: cond = c % 3 == 0; break;
+                            case 3: cond = (r + c) % 3 == 0; break;
+                            case 4: cond = (r / 2 + c / 3) % 2 == 0; break;
+                            case 5: cond = ((r * c) % 2) + ((r * c) % 3) == 0; break;
+                            case 6: cond = (((r * c) % 2) + ((r * c) % 3)) % 2 == 0; break;
+                            case 7: cond = (((r + c) % 2) + ((r * c) % 3)) % 2 == 0; break;
+                        }
+                        if (cond) candidate[r, c] = !candidate[r, c];
+                    }
+                }
+
+                ApplyFormatInfo(candidate, 1, mask);
+                int penalty = ScorePenalty(candidate);
+                if (penalty < bestPenalty)
+                {
+                    bestPenalty = penalty;
+                    bestMask = mask;
+                }
+            }
+
+            for (int r = 0; r < size; r++)
+            {
+                for (int c = 0; c < size; c++)
+                {
+                    if (isFunc[r, c]) continue;
+                    bool cond = false;
+                    switch (bestMask)
+                    {
+                        case 0: cond = (r + c) % 2 == 0; break;
+                        case 1: cond = r % 2 == 0; break;
+                        case 2: cond = c % 3 == 0; break;
+                        case 3: cond = (r + c) % 3 == 0; break;
+                        case 4: cond = (r / 2 + c / 3) % 2 == 0; break;
+                        case 5: cond = ((r * c) % 2) + ((r * c) % 3) == 0; break;
+                        case 6: cond = (((r * c) % 2) + ((r * c) % 3)) % 2 == 0; break;
+                        case 7: cond = (((r + c) % 2) + ((r * c) % 3)) % 2 == 0; break;
+                    }
+                    if (cond) grid[r, c] = !grid[r, c];
+                }
+            }
+
+            ApplyFormatInfo(grid, 1, bestMask);
+            return grid;
+        }
+
+        private static void ApplyFormatInfo(bool[,] g, int ecLevel, int mask)
+        {
+            int size = g.GetLength(0);
+            int data = (ecLevel << 3) | mask;
+            int rem = data << 10;
+            for (int i = 4; i >= 0; i--)
+            {
+                if ((rem & (1 << (i + 10))) != 0)
+                {
+                    rem ^= (0x537 << i);
+                }
+            }
+            int bits = ((data << 10) | rem) ^ 0x5412;
+
+            int[] rCoords = { 0, 1, 2, 3, 4, 5, 7, 8, 8, 8, 8, 8, 8, 8, 8 };
+            int[] cCoords = { 8, 8, 8, 8, 8, 8, 8, 8, 7, 5, 4, 3, 2, 1, 0 };
+            for (int i = 0; i < 15; i++)
+            {
+                bool dark = ((bits >> (14 - i)) & 1) == 1;
+                g[rCoords[i], cCoords[i]] = dark;
+            }
+
+            for (int i = 0; i < 8; i++)
+            {
+                bool dark = ((bits >> (14 - i)) & 1) == 1;
+                g[8, size - 1 - i] = dark;
+            }
+            for (int i = 8; i < 15; i++)
+            {
+                bool dark = ((bits >> (14 - i)) & 1) == 1;
+                g[size - 15 + i, 8] = dark;
+            }
+        }
+
+        private static int ScorePenalty(bool[,] g)
+        {
+            int size = g.GetLength(0);
+            int score = 0;
+
+            for (int r = 0; r < size; r++)
+            {
+                int run = 1;
+                for (int c = 1; c < size; c++)
+                {
+                    if (g[r, c] == g[r, c - 1]) run++;
+                    else { if (run >= 5) score += 3 + (run - 5); run = 1; }
+                }
+                if (run >= 5) score += 3 + (run - 5);
+            }
+
+            for (int c = 0; c < size; c++)
+            {
+                int run = 1;
+                for (int r = 1; r < size; r++)
+                {
+                    if (g[r, c] == g[r - 1, c]) run++;
+                    else { if (run >= 5) score += 3 + (run - 5); run = 1; }
+                }
+                if (run >= 5) score += 3 + (run - 5);
+            }
+
+            for (int r = 0; r < size - 1; r++)
+            {
+                for (int c = 0; c < size - 1; c++)
+                {
+                    bool v = g[r, c];
+                    if (g[r, c + 1] == v && g[r + 1, c] == v && g[r + 1, c + 1] == v) score += 3;
+                }
+            }
+
+            int darkCount = 0;
+            for (int r = 0; r < size; r++)
+                for (int c = 0; c < size; c++)
+                    if (g[r, c]) darkCount++;
+
+            int pct = (darkCount * 100) / (size * size);
+            score += (Math.Abs(pct - 50) / 5) * 10;
+            return score;
         }
     }
 

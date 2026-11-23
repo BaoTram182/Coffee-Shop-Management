@@ -25,6 +25,7 @@
             this.flpNhanVien = new System.Windows.Forms.FlowLayoutPanel();
             this.lblHeaderLeft = new System.Windows.Forms.Label();
             this.pnlRightPIN = new System.Windows.Forms.Panel();
+            this.pnlBottomLogin = new System.Windows.Forms.Panel();
             this.btnVaoCa = new Coffee_Shop_Management.RoundedButton();
             this.tblKeypad = new System.Windows.Forms.TableLayoutPanel();
             this.btnSo1 = new Coffee_Shop_Management.RoundedButton();
@@ -46,6 +47,7 @@
             this.mainSplit.SuspendLayout();
             this.pnlLeftNV.SuspendLayout();
             this.pnlRightPIN.SuspendLayout();
+            this.pnlBottomLogin.SuspendLayout();
             this.tblKeypad.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,8 +60,8 @@
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Padding = new System.Windows.Forms.Padding(21, 12, 21, 12);
-            this.pnlHeader.Size = new System.Drawing.Size(1776, 98);
+            this.pnlHeader.Padding = new System.Windows.Forms.Padding(21, 10, 21, 10);
+            this.pnlHeader.Size = new System.Drawing.Size(1776, 84);
             this.pnlHeader.TabIndex = 0;
             // 
             // btnThoat
@@ -74,10 +76,10 @@
             this.btnThoat.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnThoat.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
             this.btnThoat.ForeColor = System.Drawing.Color.White;
-            this.btnThoat.Location = new System.Drawing.Point(1545, 12);
+            this.btnThoat.Location = new System.Drawing.Point(1555, 10);
             this.btnThoat.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.btnThoat.Name = "btnThoat";
-            this.btnThoat.Size = new System.Drawing.Size(210, 74);
+            this.btnThoat.Size = new System.Drawing.Size(200, 64);
             this.btnThoat.TabIndex = 1;
             this.btnThoat.Text = "THOÁT";
             this.btnThoat.UseVisualStyleBackColor = false;
@@ -87,10 +89,10 @@
             this.lblTitle.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(21, 12);
+            this.lblTitle.Location = new System.Drawing.Point(21, 10);
             this.lblTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(1734, 74);
+            this.lblTitle.Size = new System.Drawing.Size(1734, 64);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "GÁC XÉP THÁNG TƯ  |  ĐĂNG NHẬP";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -104,13 +106,13 @@
             this.mainSplit.Controls.Add(this.pnlLeftNV, 0, 0);
             this.mainSplit.Controls.Add(this.pnlRightPIN, 1, 0);
             this.mainSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mainSplit.Location = new System.Drawing.Point(0, 98);
+            this.mainSplit.Location = new System.Drawing.Point(0, 84);
             this.mainSplit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.mainSplit.Name = "mainSplit";
-            this.mainSplit.Padding = new System.Windows.Forms.Padding(18, 18, 18, 18);
+            this.mainSplit.Padding = new System.Windows.Forms.Padding(14, 14, 14, 14);
             this.mainSplit.RowCount = 1;
             this.mainSplit.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.mainSplit.Size = new System.Drawing.Size(1776, 952);
+            this.mainSplit.Size = new System.Drawing.Size(1776, 966);
             this.mainSplit.TabIndex = 1;
             // 
             // pnlLeftNV
@@ -119,10 +121,10 @@
             this.pnlLeftNV.Controls.Add(this.flpNhanVien);
             this.pnlLeftNV.Controls.Add(this.lblHeaderLeft);
             this.pnlLeftNV.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlLeftNV.Location = new System.Drawing.Point(27, 27);
-            this.pnlLeftNV.Margin = new System.Windows.Forms.Padding(9, 9, 9, 9);
+            this.pnlLeftNV.Location = new System.Drawing.Point(22, 22);
+            this.pnlLeftNV.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
             this.pnlLeftNV.Name = "pnlLeftNV";
-            this.pnlLeftNV.Size = new System.Drawing.Size(991, 898);
+            this.pnlLeftNV.Size = new System.Drawing.Size(997, 922);
             this.pnlLeftNV.TabIndex = 0;
             // 
             // flpNhanVien
@@ -130,11 +132,11 @@
             this.flpNhanVien.AutoScroll = true;
             this.flpNhanVien.BackColor = System.Drawing.Color.White;
             this.flpNhanVien.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flpNhanVien.Location = new System.Drawing.Point(0, 68);
+            this.flpNhanVien.Location = new System.Drawing.Point(0, 52);
             this.flpNhanVien.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.flpNhanVien.Name = "flpNhanVien";
-            this.flpNhanVien.Padding = new System.Windows.Forms.Padding(18, 18, 18, 18);
-            this.flpNhanVien.Size = new System.Drawing.Size(991, 830);
+            this.flpNhanVien.Padding = new System.Windows.Forms.Padding(16, 16, 16, 16);
+            this.flpNhanVien.Size = new System.Drawing.Size(997, 870);
             this.flpNhanVien.TabIndex = 1;
             // 
             // lblHeaderLeft
@@ -146,7 +148,7 @@
             this.lblHeaderLeft.Location = new System.Drawing.Point(0, 0);
             this.lblHeaderLeft.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblHeaderLeft.Name = "lblHeaderLeft";
-            this.lblHeaderLeft.Size = new System.Drawing.Size(991, 68);
+            this.lblHeaderLeft.Size = new System.Drawing.Size(997, 52);
             this.lblHeaderLeft.TabIndex = 0;
             this.lblHeaderLeft.Text = "  1. TÀI KHOẢN NHÂN VIÊN";
             this.lblHeaderLeft.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -154,17 +156,28 @@
             // pnlRightPIN
             // 
             this.pnlRightPIN.BackColor = System.Drawing.Color.White;
-            this.pnlRightPIN.Controls.Add(this.btnVaoCa);
             this.pnlRightPIN.Controls.Add(this.tblKeypad);
+            this.pnlRightPIN.Controls.Add(this.pnlBottomLogin);
             this.pnlRightPIN.Controls.Add(this.lblHienThiPIN);
             this.pnlRightPIN.Controls.Add(this.lblTaiKhoanChon);
             this.pnlRightPIN.Controls.Add(this.lblHeaderRight);
             this.pnlRightPIN.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlRightPIN.Location = new System.Drawing.Point(1036, 27);
-            this.pnlRightPIN.Margin = new System.Windows.Forms.Padding(9, 9, 9, 9);
+            this.pnlRightPIN.Location = new System.Drawing.Point(1035, 22);
+            this.pnlRightPIN.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
             this.pnlRightPIN.Name = "pnlRightPIN";
-            this.pnlRightPIN.Size = new System.Drawing.Size(713, 898);
+            this.pnlRightPIN.Size = new System.Drawing.Size(718, 922);
             this.pnlRightPIN.TabIndex = 1;
+            // 
+            // pnlBottomLogin
+            // 
+            this.pnlBottomLogin.BackColor = System.Drawing.Color.White;
+            this.pnlBottomLogin.Controls.Add(this.btnVaoCa);
+            this.pnlBottomLogin.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.pnlBottomLogin.Location = new System.Drawing.Point(0, 846);
+            this.pnlBottomLogin.Name = "pnlBottomLogin";
+            this.pnlBottomLogin.Padding = new System.Windows.Forms.Padding(16, 4, 16, 12);
+            this.pnlBottomLogin.Size = new System.Drawing.Size(718, 76);
+            this.pnlBottomLogin.TabIndex = 4;
             // 
             // btnVaoCa
             // 
@@ -173,16 +186,15 @@
             this.btnVaoCa.BorderRadius = 14;
             this.btnVaoCa.BorderSize = 0;
             this.btnVaoCa.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnVaoCa.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.btnVaoCa.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnVaoCa.FlatAppearance.BorderSize = 0;
             this.btnVaoCa.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnVaoCa.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            this.btnVaoCa.Font = new System.Drawing.Font("Segoe UI", 12.5F, System.Drawing.FontStyle.Bold);
             this.btnVaoCa.ForeColor = System.Drawing.Color.White;
-            this.btnVaoCa.Location = new System.Drawing.Point(0, 793);
-            this.btnVaoCa.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.btnVaoCa.Location = new System.Drawing.Point(16, 4);
             this.btnVaoCa.Name = "btnVaoCa";
-            this.btnVaoCa.Size = new System.Drawing.Size(713, 105);
-            this.btnVaoCa.TabIndex = 4;
+            this.btnVaoCa.Size = new System.Drawing.Size(686, 60);
+            this.btnVaoCa.TabIndex = 0;
             this.btnVaoCa.Text = "ĐĂNG NHẬP";
             this.btnVaoCa.UseVisualStyleBackColor = false;
             // 
@@ -205,34 +217,34 @@
             this.tblKeypad.Controls.Add(this.btnSo0, 1, 3);
             this.tblKeypad.Controls.Add(this.btnLui, 2, 3);
             this.tblKeypad.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tblKeypad.Location = new System.Drawing.Point(0, 228);
+            this.tblKeypad.Location = new System.Drawing.Point(0, 150);
             this.tblKeypad.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tblKeypad.Name = "tblKeypad";
-            this.tblKeypad.Padding = new System.Windows.Forms.Padding(18, 18, 18, 18);
+            this.tblKeypad.Padding = new System.Windows.Forms.Padding(12, 8, 12, 6);
             this.tblKeypad.RowCount = 4;
             this.tblKeypad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tblKeypad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tblKeypad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tblKeypad.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
-            this.tblKeypad.Size = new System.Drawing.Size(713, 670);
+            this.tblKeypad.Size = new System.Drawing.Size(718, 696);
             this.tblKeypad.TabIndex = 3;
             // 
             // btnSo1
             // 
             this.btnSo1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo1.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo1.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo1.BorderRadius = 14;
-            this.btnSo1.BorderSize = 1;
+            this.btnSo1.BorderSize = 0;
             this.btnSo1.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo1.FlatAppearance.BorderSize = 0;
             this.btnSo1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo1.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo1.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo1.Location = new System.Drawing.Point(26, 26);
-            this.btnSo1.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo1.Location = new System.Drawing.Point(17, 13);
+            this.btnSo1.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo1.Name = "btnSo1";
-            this.btnSo1.Size = new System.Drawing.Size(209, 142);
+            this.btnSo1.Size = new System.Drawing.Size(221, 159);
             this.btnSo1.TabIndex = 0;
             this.btnSo1.Text = "1";
             this.btnSo1.UseVisualStyleBackColor = false;
@@ -240,19 +252,19 @@
             // btnSo2
             // 
             this.btnSo2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo2.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo2.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo2.BorderRadius = 14;
-            this.btnSo2.BorderSize = 1;
+            this.btnSo2.BorderSize = 0;
             this.btnSo2.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo2.FlatAppearance.BorderSize = 0;
             this.btnSo2.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo2.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo2.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo2.Location = new System.Drawing.Point(251, 26);
-            this.btnSo2.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo2.Location = new System.Drawing.Point(248, 13);
+            this.btnSo2.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo2.Name = "btnSo2";
-            this.btnSo2.Size = new System.Drawing.Size(209, 142);
+            this.btnSo2.Size = new System.Drawing.Size(221, 159);
             this.btnSo2.TabIndex = 1;
             this.btnSo2.Text = "2";
             this.btnSo2.UseVisualStyleBackColor = false;
@@ -260,19 +272,19 @@
             // btnSo3
             // 
             this.btnSo3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo3.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo3.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo3.BorderRadius = 14;
-            this.btnSo3.BorderSize = 1;
+            this.btnSo3.BorderSize = 0;
             this.btnSo3.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo3.FlatAppearance.BorderSize = 0;
             this.btnSo3.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo3.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo3.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo3.Location = new System.Drawing.Point(476, 26);
-            this.btnSo3.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo3.Location = new System.Drawing.Point(479, 13);
+            this.btnSo3.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo3.Name = "btnSo3";
-            this.btnSo3.Size = new System.Drawing.Size(211, 142);
+            this.btnSo3.Size = new System.Drawing.Size(222, 159);
             this.btnSo3.TabIndex = 2;
             this.btnSo3.Text = "3";
             this.btnSo3.UseVisualStyleBackColor = false;
@@ -280,19 +292,19 @@
             // btnSo4
             // 
             this.btnSo4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo4.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo4.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo4.BorderRadius = 14;
-            this.btnSo4.BorderSize = 1;
+            this.btnSo4.BorderSize = 0;
             this.btnSo4.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo4.FlatAppearance.BorderSize = 0;
             this.btnSo4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo4.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo4.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo4.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo4.Location = new System.Drawing.Point(26, 184);
-            this.btnSo4.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo4.Location = new System.Drawing.Point(17, 182);
+            this.btnSo4.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo4.Name = "btnSo4";
-            this.btnSo4.Size = new System.Drawing.Size(209, 142);
+            this.btnSo4.Size = new System.Drawing.Size(221, 159);
             this.btnSo4.TabIndex = 3;
             this.btnSo4.Text = "4";
             this.btnSo4.UseVisualStyleBackColor = false;
@@ -300,19 +312,19 @@
             // btnSo5
             // 
             this.btnSo5.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo5.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo5.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo5.BorderRadius = 14;
-            this.btnSo5.BorderSize = 1;
+            this.btnSo5.BorderSize = 0;
             this.btnSo5.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo5.FlatAppearance.BorderSize = 0;
             this.btnSo5.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo5.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo5.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo5.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo5.Location = new System.Drawing.Point(251, 184);
-            this.btnSo5.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo5.Location = new System.Drawing.Point(248, 182);
+            this.btnSo5.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo5.Name = "btnSo5";
-            this.btnSo5.Size = new System.Drawing.Size(209, 142);
+            this.btnSo5.Size = new System.Drawing.Size(221, 159);
             this.btnSo5.TabIndex = 4;
             this.btnSo5.Text = "5";
             this.btnSo5.UseVisualStyleBackColor = false;
@@ -320,19 +332,19 @@
             // btnSo6
             // 
             this.btnSo6.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo6.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo6.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo6.BorderRadius = 14;
-            this.btnSo6.BorderSize = 1;
+            this.btnSo6.BorderSize = 0;
             this.btnSo6.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo6.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo6.FlatAppearance.BorderSize = 0;
             this.btnSo6.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo6.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo6.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo6.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo6.Location = new System.Drawing.Point(476, 184);
-            this.btnSo6.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo6.Location = new System.Drawing.Point(479, 182);
+            this.btnSo6.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo6.Name = "btnSo6";
-            this.btnSo6.Size = new System.Drawing.Size(211, 142);
+            this.btnSo6.Size = new System.Drawing.Size(222, 159);
             this.btnSo6.TabIndex = 5;
             this.btnSo6.Text = "6";
             this.btnSo6.UseVisualStyleBackColor = false;
@@ -340,19 +352,19 @@
             // btnSo7
             // 
             this.btnSo7.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo7.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo7.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo7.BorderRadius = 14;
-            this.btnSo7.BorderSize = 1;
+            this.btnSo7.BorderSize = 0;
             this.btnSo7.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo7.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo7.FlatAppearance.BorderSize = 0;
             this.btnSo7.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo7.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo7.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo7.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo7.Location = new System.Drawing.Point(26, 342);
-            this.btnSo7.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo7.Location = new System.Drawing.Point(17, 351);
+            this.btnSo7.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo7.Name = "btnSo7";
-            this.btnSo7.Size = new System.Drawing.Size(209, 142);
+            this.btnSo7.Size = new System.Drawing.Size(221, 159);
             this.btnSo7.TabIndex = 6;
             this.btnSo7.Text = "7";
             this.btnSo7.UseVisualStyleBackColor = false;
@@ -360,19 +372,19 @@
             // btnSo8
             // 
             this.btnSo8.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo8.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo8.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo8.BorderRadius = 14;
-            this.btnSo8.BorderSize = 1;
+            this.btnSo8.BorderSize = 0;
             this.btnSo8.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo8.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo8.FlatAppearance.BorderSize = 0;
             this.btnSo8.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo8.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo8.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo8.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo8.Location = new System.Drawing.Point(251, 342);
-            this.btnSo8.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo8.Location = new System.Drawing.Point(248, 351);
+            this.btnSo8.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo8.Name = "btnSo8";
-            this.btnSo8.Size = new System.Drawing.Size(209, 142);
+            this.btnSo8.Size = new System.Drawing.Size(221, 159);
             this.btnSo8.TabIndex = 7;
             this.btnSo8.Text = "8";
             this.btnSo8.UseVisualStyleBackColor = false;
@@ -380,19 +392,19 @@
             // btnSo9
             // 
             this.btnSo9.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo9.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo9.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo9.BorderRadius = 14;
-            this.btnSo9.BorderSize = 1;
+            this.btnSo9.BorderSize = 0;
             this.btnSo9.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo9.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo9.FlatAppearance.BorderSize = 0;
             this.btnSo9.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo9.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo9.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo9.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo9.Location = new System.Drawing.Point(476, 342);
-            this.btnSo9.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo9.Location = new System.Drawing.Point(479, 351);
+            this.btnSo9.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo9.Name = "btnSo9";
-            this.btnSo9.Size = new System.Drawing.Size(211, 142);
+            this.btnSo9.Size = new System.Drawing.Size(222, 159);
             this.btnSo9.TabIndex = 8;
             this.btnSo9.Text = "9";
             this.btnSo9.UseVisualStyleBackColor = false;
@@ -407,12 +419,12 @@
             this.btnXoaHet.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnXoaHet.FlatAppearance.BorderSize = 0;
             this.btnXoaHet.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnXoaHet.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
+            this.btnXoaHet.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.btnXoaHet.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(67)))), ((int)(((byte)(21)))));
-            this.btnXoaHet.Location = new System.Drawing.Point(26, 500);
-            this.btnXoaHet.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnXoaHet.Location = new System.Drawing.Point(17, 520);
+            this.btnXoaHet.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnXoaHet.Name = "btnXoaHet";
-            this.btnXoaHet.Size = new System.Drawing.Size(209, 144);
+            this.btnXoaHet.Size = new System.Drawing.Size(221, 159);
             this.btnXoaHet.TabIndex = 9;
             this.btnXoaHet.Text = "XÓA HẾT";
             this.btnXoaHet.UseVisualStyleBackColor = false;
@@ -420,19 +432,19 @@
             // btnSo0
             // 
             this.btnSo0.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
-            this.btnSo0.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(215)))), ((int)(((byte)(204)))), ((int)(((byte)(200)))));
+            this.btnSo0.BorderColor = System.Drawing.Color.Transparent;
             this.btnSo0.BorderRadius = 14;
-            this.btnSo0.BorderSize = 1;
+            this.btnSo0.BorderSize = 0;
             this.btnSo0.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSo0.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSo0.FlatAppearance.BorderSize = 0;
             this.btnSo0.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSo0.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.btnSo0.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.btnSo0.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(62)))), ((int)(((byte)(39)))), ((int)(((byte)(35)))));
-            this.btnSo0.Location = new System.Drawing.Point(251, 500);
-            this.btnSo0.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnSo0.Location = new System.Drawing.Point(248, 520);
+            this.btnSo0.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnSo0.Name = "btnSo0";
-            this.btnSo0.Size = new System.Drawing.Size(209, 144);
+            this.btnSo0.Size = new System.Drawing.Size(221, 159);
             this.btnSo0.TabIndex = 10;
             this.btnSo0.Text = "0";
             this.btnSo0.UseVisualStyleBackColor = false;
@@ -447,12 +459,12 @@
             this.btnLui.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnLui.FlatAppearance.BorderSize = 0;
             this.btnLui.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnLui.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.btnLui.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.btnLui.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(67)))), ((int)(((byte)(21)))));
-            this.btnLui.Location = new System.Drawing.Point(476, 500);
-            this.btnLui.Margin = new System.Windows.Forms.Padding(8, 8, 8, 8);
+            this.btnLui.Location = new System.Drawing.Point(479, 520);
+            this.btnLui.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
             this.btnLui.Name = "btnLui";
-            this.btnLui.Size = new System.Drawing.Size(211, 144);
+            this.btnLui.Size = new System.Drawing.Size(222, 159);
             this.btnLui.TabIndex = 11;
             this.btnLui.Text = "⌫";
             this.btnLui.UseVisualStyleBackColor = false;
@@ -461,12 +473,12 @@
             // 
             this.lblHienThiPIN.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(246)))), ((int)(((byte)(240)))));
             this.lblHienThiPIN.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblHienThiPIN.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.lblHienThiPIN.Font = new System.Drawing.Font("Segoe UI", 15F, System.Drawing.FontStyle.Bold);
             this.lblHienThiPIN.ForeColor = System.Drawing.Color.Gray;
-            this.lblHienThiPIN.Location = new System.Drawing.Point(0, 136);
+            this.lblHienThiPIN.Location = new System.Drawing.Point(0, 94);
             this.lblHienThiPIN.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblHienThiPIN.Name = "lblHienThiPIN";
-            this.lblHienThiPIN.Size = new System.Drawing.Size(713, 92);
+            this.lblHienThiPIN.Size = new System.Drawing.Size(718, 56);
             this.lblHienThiPIN.TabIndex = 2;
             this.lblHienThiPIN.Text = "Nhập mật khẩu";
             this.lblHienThiPIN.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -475,12 +487,12 @@
             // 
             this.lblTaiKhoanChon.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(243)))), ((int)(((byte)(224)))));
             this.lblTaiKhoanChon.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblTaiKhoanChon.Font = new System.Drawing.Font("Segoe UI", 11.5F, System.Drawing.FontStyle.Bold);
+            this.lblTaiKhoanChon.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
             this.lblTaiKhoanChon.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(216)))), ((int)(((byte)(67)))), ((int)(((byte)(21)))));
-            this.lblTaiKhoanChon.Location = new System.Drawing.Point(0, 68);
+            this.lblTaiKhoanChon.Location = new System.Drawing.Point(0, 52);
             this.lblTaiKhoanChon.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblTaiKhoanChon.Name = "lblTaiKhoanChon";
-            this.lblTaiKhoanChon.Size = new System.Drawing.Size(713, 68);
+            this.lblTaiKhoanChon.Size = new System.Drawing.Size(718, 42);
             this.lblTaiKhoanChon.TabIndex = 1;
             this.lblTaiKhoanChon.Text = "Tài khoản: Chưa chọn";
             this.lblTaiKhoanChon.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -494,7 +506,7 @@
             this.lblHeaderRight.Location = new System.Drawing.Point(0, 0);
             this.lblHeaderRight.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.lblHeaderRight.Name = "lblHeaderRight";
-            this.lblHeaderRight.Size = new System.Drawing.Size(713, 68);
+            this.lblHeaderRight.Size = new System.Drawing.Size(718, 52);
             this.lblHeaderRight.TabIndex = 0;
             this.lblHeaderRight.Text = "  2. NHẬP MẬT KHẨU";
             this.lblHeaderRight.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -516,6 +528,7 @@
             this.mainSplit.ResumeLayout(false);
             this.pnlLeftNV.ResumeLayout(false);
             this.pnlRightPIN.ResumeLayout(false);
+            this.pnlBottomLogin.ResumeLayout(false);
             this.tblKeypad.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -531,6 +544,7 @@
         private System.Windows.Forms.FlowLayoutPanel flpNhanVien;
         private System.Windows.Forms.Label lblHeaderLeft;
         private System.Windows.Forms.Panel pnlRightPIN;
+        private System.Windows.Forms.Panel pnlBottomLogin;
         private Coffee_Shop_Management.RoundedButton btnVaoCa;
         private System.Windows.Forms.TableLayoutPanel tblKeypad;
         private Coffee_Shop_Management.RoundedButton btnSo1;
