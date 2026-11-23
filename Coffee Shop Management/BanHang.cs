@@ -5,8 +5,6 @@ using System.Data.SqlClient;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Printing;
-using System.IO;
-using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
@@ -22,7 +20,6 @@ namespace Coffee_Shop_Management
         private readonly string binQR = "970436";
         private readonly string soTaiKhoanQR = "9337684994";
         private readonly string chuTaiKhoanQR = "NGUYEN NGOC BAO TRAM";
-        private readonly string duongDanQRCoDinh = @"C:\Users\bao84\source\repos\qr_thanhtoan.jpg";
 
         public BanHang(string TenTK = "admin", string Quyen = "Admin")
         {
@@ -756,7 +753,7 @@ namespace Coffee_Shop_Management
 
             using (Form dlg = new Form())
             {
-                dlg.Text = $"Thanh toán - {tenBan}";
+                dlg.Text = $"Thanh toán cảm ứng - {tenBan}";
                 dlg.Size = new Size(560, 600);
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -1172,17 +1169,35 @@ namespace Coffee_Shop_Management
             }
         }
 
-        private string TaoChuoiVietQR(int idHD, string tenBan, decimal tongTien)
+        private string BoDauTiengViet(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return "";
+            string normalized = input.Normalize(NormalizationForm.FormD);
+            StringBuilder sb = new StringBuilder(normalized.Length);
+            foreach (char c in normalized)
+            {
+                var uc = System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c);
+                if (uc != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    if (c == 'đ') sb.Append('d');
+                    else if (c == 'Đ') sb.Append('D');
+                    else sb.Append(c);
+                }
+            }
+            return sb.ToString().Normalize(NormalizationForm.FormC).ToUpperInvariant();
+        }
+
+        private string TaoChuoiVietQR(decimal tongTien)
         {
             string soTienStr = ((long)Math.Max(0, tongTien)).ToString();
-            string noiDung = $"HD{idHD} {tenBan}";
-            if (noiDung.Length > 25) noiDung = noiDung.Substring(0, 25);
+
+            string tenChuTK = BoDauTiengViet(chuTaiKhoanQR).Trim();
+            if (tenChuTK.Length > 25) tenChuTK = tenChuTK.Substring(0, 25).Trim();
 
             string tlv(string id, string val) => $"{id}{val.Length:00}{val}";
 
-            string beneficiary = tlv("00", binQR) + tlv("01", soTaiKhoanQR);
+            string beneficiary = tlv("00", binQR.Trim()) + tlv("01", soTaiKhoanQR.Trim());
             string merchantInfo = tlv("00", "A000000727") + tlv("01", beneficiary) + tlv("02", "QRIBFTTA");
-            string addData = tlv("08", noiDung);
 
             string payloadWithoutCrc =
                 tlv("00", "01") +
@@ -1191,8 +1206,7 @@ namespace Coffee_Shop_Management
                 tlv("53", "704") +
                 tlv("54", soTienStr) +
                 tlv("58", "VN") +
-                tlv("59", chuTaiKhoanQR) +
-                tlv("62", addData) +
+                tlv("59", tenChuTK) +
                 "6304";
 
             ushort crc = 0xFFFF;
@@ -1212,9 +1226,9 @@ namespace Coffee_Shop_Management
             return payloadWithoutCrc + crc.ToString("X4");
         }
 
-        private Bitmap TaoAnhQRChuan(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
+        private Bitmap TaoAnhQRChuan(decimal tongTien, int kichThuoc = 200)
         {
-            string noiDungQR = TaoChuoiVietQR(idHD, tenBan, tongTien);
+            string noiDungQR = TaoChuoiVietQR(tongTien);
             bool[,] maTran = QrCodeMatrixBuilder.Build(noiDungQR);
             int soO = maTran.GetLength(0);
             int quietZone = 4;
@@ -1258,150 +1272,89 @@ namespace Coffee_Shop_Management
             return ketQua;
         }
 
-        private Bitmap LayAnhVietQRChuan(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
-        {
-            string noiDungCK = Uri.EscapeDataString($"HD{idHD} {tenBan}");
-            string tenChuTK = Uri.EscapeDataString(chuTaiKhoanQR);
-            string url = $"https://img.vietqr.io/image/{binQR}-{soTaiKhoanQR}-qr_only.png?amount={(long)Math.Max(0, tongTien)}&addInfo={noiDungCK}&accountName={tenChuTK}";
-
-            try
-            {
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(url);
-                req.Timeout = 6000;
-                req.UserAgent = "Mozilla/5.0";
-
-                using (WebResponse resp = req.GetResponse())
-                using (Stream stream = resp.GetResponseStream())
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    stream.CopyTo(ms);
-                    ms.Position = 0;
-                    using (Image imgGoc = Image.FromStream(ms))
-                    {
-                        Bitmap bmp = new Bitmap(kichThuoc, kichThuoc);
-                        using (Graphics g = Graphics.FromImage(bmp))
-                        {
-                            g.Clear(Color.White);
-                            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                            g.SmoothingMode = SmoothingMode.HighQuality;
-                            g.DrawImage(imgGoc, 0, 0, kichThuoc, kichThuoc);
-                        }
-                        return bmp;
-                    }
-                }
-            }
-            catch
-            {
-                return TaoAnhQRChuan(idHD, tenBan, tongTien, kichThuoc);
-            }
-        }
-
-        private Bitmap LayAnhQRCoDinh(int idHD, string tenBan, decimal tongTien, int kichThuoc = 196)
-        {
-            if (File.Exists(duongDanQRCoDinh))
-            {
-                using (Image imgGoc = Image.FromFile(duongDanQRCoDinh))
-                {
-                    Bitmap bmp = new Bitmap(kichThuoc, kichThuoc);
-                    using (Graphics g = Graphics.FromImage(bmp))
-                    {
-                        g.Clear(Color.White);
-                        g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        g.SmoothingMode = SmoothingMode.HighQuality;
-                        g.DrawImage(imgGoc, 0, 0, kichThuoc, kichThuoc);
-                    }
-                    return bmp;
-                }
-            }
-
-            return LayAnhVietQRChuan(idHD, tenBan, tongTien, kichThuoc);
-        }
-
         private void InHoaDon(int idHD, string tenBan, DataTable dtChiTiet, decimal tongTien, decimal tienKhachDua, decimal tienThoi)
         {
-            Bitmap qrChuanBi = LayAnhQRCoDinh(idHD, tenBan, tongTien, 196);
+            Bitmap qrChuanBi = TaoAnhQRChuan(tongTien, 200);
 
             PrintDocument printDoc = new PrintDocument();
-            int chieuCaoGiay = 610 + (dtChiTiet.Rows.Count * 28);
+            int chieuCaoGiay = 620 + (dtChiTiet.Rows.Count * 28);
             printDoc.DefaultPageSettings.PaperSize = new PaperSize("BillK80", 320, chieuCaoGiay);
 
             printDoc.PrintPage += (s, ev) =>
             {
                 Graphics g = ev.Graphics;
-                Font fTieuDe = new Font("Segoe UI", 13, FontStyle.Bold);
-                Font fSub = new Font("Segoe UI", 8.5f, FontStyle.Italic);
-                Font fHoaDon = new Font("Segoe UI", 11, FontStyle.Bold);
-                Font fThuong = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-                Font fDam = new Font("Segoe UI", 8.5f, FontStyle.Bold);
-                Font fTong = new Font("Segoe UI", 10.5f, FontStyle.Bold);
-
-                Brush brushNau = new SolidBrush(Color.FromArgb(62, 39, 35));
-                Pen penNetDut = new Pen(Color.Gray, 1) { DashStyle = DashStyle.Dash };
-                StringFormat canGiua = new StringFormat { Alignment = StringAlignment.Center };
-                StringFormat canPhai = new StringFormat { Alignment = StringAlignment.Far };
-
-                int y = 15, width = 320;
-                g.DrawString("GÁC XÉP THÁNG TƯ", fTieuDe, brushNau, new RectangleF(0, y, width, 24), canGiua);
-                y += 24;
-                g.DrawString("Coffee & Tea - Ấm áp từng khoảnh khắc", fSub, Brushes.Black, new RectangleF(0, y, width, 18), canGiua);
-                y += 22;
-                g.DrawLine(penNetDut, 12, y, width - 12, y);
-                y += 10;
-
-                g.DrawString("PHIẾU THANH TOÁN", fHoaDon, Brushes.Black, new RectangleF(0, y, width, 22), canGiua);
-                y += 26;
-                g.DrawString($"Số HĐ: #{idHD}", fThuong, Brushes.Black, 14, y);
-                g.DrawString($"Bàn: {tenBan}", fDam, Brushes.Black, width - 14, y, canPhai);
-                y += 18;
-                g.DrawString($"Ngày: {DateTime.Now:dd/MM/yyyy HH:mm}", fThuong, Brushes.Black, 14, y);
-                g.DrawString($"NV: {TenNhanVien}", fThuong, Brushes.Black, width - 14, y, canPhai);
-                y += 22;
-                g.DrawLine(penNetDut, 12, y, width - 12, y);
-                y += 8;
-
-                g.DrawString("Tên món", fDam, Brushes.Black, 14, y);
-                g.DrawString("SL", fDam, Brushes.Black, 185, y, canGiua);
-                g.DrawString("Thành tiền", fDam, Brushes.Black, width - 14, y, canPhai);
-                y += 20;
-                g.DrawLine(penNetDut, 12, y, width - 12, y);
-                y += 8;
-
-                foreach (DataRow row in dtChiTiet.Rows)
+                using (Font fTieuDe = new Font("Segoe UI", 13, FontStyle.Bold))
+                using (Font fSub = new Font("Segoe UI", 8.5f, FontStyle.Italic))
+                using (Font fHoaDon = new Font("Segoe UI", 11, FontStyle.Bold))
+                using (Font fThuong = new Font("Segoe UI", 8.5f, FontStyle.Regular))
+                using (Font fDam = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+                using (Font fTong = new Font("Segoe UI", 10.5f, FontStyle.Bold))
+                using (Brush brushNau = new SolidBrush(Color.FromArgb(62, 39, 35)))
+                using (Pen penNetDut = new Pen(Color.Gray, 1) { DashStyle = DashStyle.Dash })
                 {
-                    string tenMon = row["Tenmon"].ToString();
-                    if (tenMon.Length > 21) tenMon = tenMon.Substring(0, 20) + "…";
-                    g.DrawString(tenMon, fThuong, Brushes.Black, 14, y);
-                    g.DrawString(row["SoLuong"].ToString(), fThuong, Brushes.Black, 185, y, canGiua);
-                    g.DrawString(Convert.ToDecimal(row["ThanhTien"]).ToString("N0"), fThuong, Brushes.Black, width - 14, y, canPhai);
+                    StringFormat canGiua = new StringFormat { Alignment = StringAlignment.Center };
+                    StringFormat canPhai = new StringFormat { Alignment = StringAlignment.Far };
+
+                    int y = 15, width = 320;
+                    g.DrawString("GÁC XÉP THÁNG TƯ", fTieuDe, brushNau, new RectangleF(0, y, width, 24), canGiua);
+                    y += 24;
+                    g.DrawString("Coffee & Tea - Ấm áp từng khoảnh khắc", fSub, Brushes.Black, new RectangleF(0, y, width, 18), canGiua);
                     y += 22;
-                }
-
-                y += 4;
-                g.DrawLine(penNetDut, 12, y, width - 12, y);
-                y += 10;
-                g.DrawString("TỔNG CỘNG:", fTong, brushNau, 14, y);
-                g.DrawString($"{tongTien:N0} VNĐ", fTong, brushNau, width - 14, y, canPhai);
-                y += 24;
-                g.DrawString("Tiền khách đưa:", fThuong, Brushes.Black, 14, y);
-                g.DrawString($"{tienKhachDua:N0} VNĐ", fThuong, Brushes.Black, width - 14, y, canPhai);
-                y += 20;
-                g.DrawString("Tiền thừa trả khách:", fDam, Brushes.Black, 14, y);
-                g.DrawString($"{tienThoi:N0} VNĐ", fDam, Brushes.Black, width - 14, y, canPhai);
-                y += 22;
-
-                if (qrChuanBi != null)
-                {
                     g.DrawLine(penNetDut, 12, y, width - 12, y);
                     y += 10;
-                    int qrX = (width - qrChuanBi.Width) / 2;
-                    g.DrawImage(qrChuanBi, qrX, y, qrChuanBi.Width, qrChuanBi.Height);
-                    y += qrChuanBi.Height + 10;
-                }
 
-                g.DrawString("Cảm ơn quý khách và hẹn gặp lại!", fSub, Brushes.Black, new RectangleF(0, y, width, 20), canGiua);
+                    g.DrawString("PHIẾU THANH TOÁN", fHoaDon, Brushes.Black, new RectangleF(0, y, width, 22), canGiua);
+                    y += 26;
+                    g.DrawString($"Số HĐ: #{idHD}", fThuong, Brushes.Black, 14, y);
+                    g.DrawString($"Bàn: {tenBan}", fDam, Brushes.Black, width - 14, y, canPhai);
+                    y += 18;
+                    g.DrawString($"Ngày: {DateTime.Now:dd/MM/yyyy HH:mm}", fThuong, Brushes.Black, 14, y);
+                    g.DrawString($"NV: {TenNhanVien}", fThuong, Brushes.Black, width - 14, y, canPhai);
+                    y += 22;
+                    g.DrawLine(penNetDut, 12, y, width - 12, y);
+                    y += 8;
+
+                    g.DrawString("Tên món", fDam, Brushes.Black, 14, y);
+                    g.DrawString("SL", fDam, Brushes.Black, 185, y, canGiua);
+                    g.DrawString("Thành tiền", fDam, Brushes.Black, width - 14, y, canPhai);
+                    y += 20;
+                    g.DrawLine(penNetDut, 12, y, width - 12, y);
+                    y += 8;
+
+                    foreach (DataRow row in dtChiTiet.Rows)
+                    {
+                        string tenMon = row["Tenmon"].ToString();
+                        if (tenMon.Length > 21) tenMon = tenMon.Substring(0, 20) + "…";
+                        g.DrawString(tenMon, fThuong, Brushes.Black, 14, y);
+                        g.DrawString(row["SoLuong"].ToString(), fThuong, Brushes.Black, 185, y, canGiua);
+                        g.DrawString(Convert.ToDecimal(row["ThanhTien"]).ToString("N0"), fThuong, Brushes.Black, width - 14, y, canPhai);
+                        y += 22;
+                    }
+
+                    y += 4;
+                    g.DrawLine(penNetDut, 12, y, width - 12, y);
+                    y += 10;
+                    g.DrawString("TỔNG CỘNG:", fTong, brushNau, 14, y);
+                    g.DrawString($"{tongTien:N0} VNĐ", fTong, brushNau, width - 14, y, canPhai);
+                    y += 24;
+                    g.DrawString("Tiền khách đưa:", fThuong, Brushes.Black, 14, y);
+                    g.DrawString($"{tienKhachDua:N0} VNĐ", fThuong, Brushes.Black, width - 14, y, canPhai);
+                    y += 20;
+                    g.DrawString("Tiền thừa trả khách:", fDam, Brushes.Black, 14, y);
+                    g.DrawString($"{tienThoi:N0} VNĐ", fDam, Brushes.Black, width - 14, y, canPhai);
+                    y += 22;
+
+                    if (qrChuanBi != null)
+                    {
+                        g.DrawLine(penNetDut, 12, y, width - 12, y);
+                        y += 10;
+                        int qrX = (width - qrChuanBi.Width) / 2;
+                        g.DrawImage(qrChuanBi, qrX, y, qrChuanBi.Width, qrChuanBi.Height);
+                        y += qrChuanBi.Height + 10;
+                    }
+
+                    g.DrawString("Cảm ơn quý khách và hẹn gặp lại!", fSub, Brushes.Black, new RectangleF(0, y, width, 20), canGiua);
+                }
             };
 
             try
@@ -1419,6 +1372,7 @@ namespace Coffee_Shop_Management
             finally
             {
                 qrChuanBi?.Dispose();
+                printDoc.Dispose();
             }
         }
     }
@@ -1512,7 +1466,7 @@ namespace Coffee_Shop_Management
 
         public static bool[,] Build(string text)
         {
-            byte[] rawBytes = Encoding.UTF8.GetBytes(text);
+            byte[] rawBytes = Encoding.ASCII.GetBytes(text);
             int version = 1;
             for (int v = 1; v <= 9; v++)
             {
